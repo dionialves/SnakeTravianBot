@@ -61,6 +61,7 @@ class Village(object):
     def update_fields_village(self, village):
         """
             Atuliza todos os campos de construção da aldeia, do 1 ao 40. De uma aldeia em uma aldeia específica
+
         """
         fields = {}
         list_fields = []
@@ -124,21 +125,31 @@ class Village(object):
 
         orders = []
         if drive:
+            # Ajustando string
             drive = drive[0].text
             drive = drive.split('\n')
 
+            # Obtendo as informações da primeira ordem de construção
             orders.append(self.separate_name(drive[0]))
+            orders[0].append(self.convert_string_to_secunds(drive[1]))
+
+            # Obtendo informações da segunda ordem de construção
             if len(drive) == 4:
                 orders.append(self.separate_name(drive[2]))
+                orders[1].append(self.convert_string_to_secunds(drive[3]))
 
         self.building_ordens[village] = orders
 
     def get_resources(self, village):
         """
         Escaneia os recursos disponíveis em uma aldeia
+
+        Criar um validador de informação, pois o recurso lumber esta retornando com a seguinte informação: \u202d2878\u202c
         """
 
         self.browser.get(self.villages[village]['url']) 
+
+        time.sleep(2)
 
         lumber = self.browser.find_element(By.ID, 'l1').text
         clay = self.browser.find_element(By.ID, 'l2').text
@@ -146,10 +157,10 @@ class Village(object):
         crop = self.browser.find_element(By.ID, 'l4').text
 
         self.resources[village] = {
-            "lumber": lumber,
-            "clay": clay,
-            "iron": iron,
-            "crop": crop
+            "lumber": lumber.replace('.', ''),
+            "clay": clay.replace('.', ''),
+            "iron": iron.replace('.', ''),
+            "crop": crop.replace('.', '')
         }
 
     def upgrade_fields_resource(self, village, idField):
@@ -165,6 +176,21 @@ class Village(object):
         
         buttonUpgrade.click()
 
+    def check_construction_resources(self, idField):
+        """
+        Esta função checa se na aldeia tem os recursos necessários para a construção desejada
+        """
+        self.browser.get(self.server + '/build.php?id=' + str(idField))
+
+        time.sleep(2)
+
+        lumber = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[1]/div[1]/div[1]/span').text
+        clay = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[1]/div[1]/div[2]/span').text
+        iron = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[1]/div[1]/div[3]/span').text
+        crop = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[1]/div[1]/div[4]/span').text
+    
+        return {'lumber': lumber.replace('.', ''), 'clay': clay.replace('.', ''), 'iron': iron.replace('.', ''), 'crop': crop.replace('.', '')}
+
     def separate_name(self, name):
         """
         Utilitário para limpar a string recebida do site
@@ -173,6 +199,12 @@ class Village(object):
         result.append(name[0:name.find('N')-1])
         result.append(name[len(name)-2:len(name)].split()[0])
         return result
+    
+    def convert_string_to_secunds(self, time):
+        construction = time.split(':')
+        secunds = (int(construction[0])*3600) + (int(construction[1])*60) + int(construction[2][0:2])
+
+        return secunds
 
     def close_browser(self, *args):
         """
