@@ -1,7 +1,7 @@
 import time
 from selenium import webdriver
-from selenium.webdriver.firefox.service import Service
-from webdriver_manager.firefox import GeckoDriverManager
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 
 class Village(object):
@@ -23,28 +23,29 @@ class Village(object):
         Essa função é responsável por inicializar a instancia do navegador
         """
 
-        self.browser = webdriver.Firefox(service=Service(GeckoDriverManager().install()))
+        self.browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+        self.browser.implicitly_wait(1)
 
     def login(self, server, username, password):
         """
         Essa função é responsável por logar na pagina do travian
         """
-
+        self.instance_browser()
+        
         self.server = server
         self.username = username
         self.password = password
         self.server = 'https://' + self.server
 
-        self.instance_browser()
-
         self.browser.get(self.server)
+
         username = self.browser.find_element(By.NAME, 'name')
         password = self.browser.find_element(By.NAME, 'password')
 
         username.send_keys(self.username)
         password.send_keys(self.password)
 
-        self.browser.find_element(By.TAG_NAME, "button").click()
+        self.browser.find_element(By.XPATH, "/html/body/div[3]/div[2]/div[2]/div[2]/div/div/div[1]/form/table/tbody/tr[5]/td[2]/button").click()
 
         self.check_for_login()
 
@@ -58,10 +59,9 @@ class Village(object):
         else:
             self.is_logged = False
 
-    def update_fields_village(self, village):
+    def update_fields_village(self, village, list_ids):
         """
             Atuliza todos os campos de construção da aldeia, do 1 ao 40. De uma aldeia em uma aldeia específica
-
         """
         fields = {}
         list_fields = []
@@ -69,8 +69,8 @@ class Village(object):
 
         self.browser.get(self.villages[village]['url'])
 
-        for x in range(40):
-            self.browser.get(self.server + '/build.php?id=' + str(x+1))
+        for x in list_ids:
+            self.browser.get(f'{self.server}/build.php?id={x}')
             name = self.browser.find_elements(By.XPATH, '//*[@id="content"]/h1')[0].text
 
             if self.browser.find_elements(By.CLASS_NAME, 'buildingWrapper'):
@@ -149,7 +149,7 @@ class Village(object):
 
         self.browser.get(self.villages[village]['url']) 
 
-        time.sleep(2)
+        self.browser.implicitly_wait(4)
 
         lumber = self.browser.find_element(By.ID, 'l1').text
         clay = self.browser.find_element(By.ID, 'l2').text
@@ -169,9 +169,7 @@ class Village(object):
         """
 
         self.browser.get(self.villages[village]['url'])
-        time.sleep(2)
         self.browser.get(self.server + '/build.php?id=' + str(idField))
-        time.sleep(2)
         buttonUpgrade = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[3]/div[1]/button')
         
         buttonUpgrade.click()
@@ -180,9 +178,8 @@ class Village(object):
         """
         Esta função checa se na aldeia tem os recursos necessários para a construção desejada
         """
-        self.browser.get(self.server + '/build.php?id=' + str(idField))
 
-        time.sleep(2)
+        self.browser.get(self.server + '/build.php?id=' + str(idField))
 
         lumber = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[1]/div[1]/div[1]/span').text
         clay = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[1]/div[1]/div[2]/span').text
@@ -190,6 +187,7 @@ class Village(object):
         crop = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[1]/div[1]/div[4]/span').text
     
         return {'lumber': lumber.replace('.', ''), 'clay': clay.replace('.', ''), 'iron': iron.replace('.', ''), 'crop': crop.replace('.', '')}
+
 
     def separate_name(self, name):
         """
