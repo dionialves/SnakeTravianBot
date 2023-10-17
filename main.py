@@ -2,7 +2,7 @@ import time
 import datetime
 from village import Village
 from random import randint
-from threading import Thread
+import threading
 
 """
 Melhorias
@@ -25,7 +25,6 @@ password = "ranaeu21"
 """
 def update_resources_fields_in_level(nameVillage, toLevel, list_ids):
     while True:
-
         village.update_building_orders(nameVillage)
 
         if not village.building_ordens[nameVillage]:
@@ -102,6 +101,8 @@ if __name__ == "__main__":
         """
         Pega informação da aldeia a ser atualizada e o level dos recursos
         """
+
+        print("____________________________________________________________")
         print("Escolha a aldeia a evoluir: ")
         aux = 1
         list_names = []
@@ -114,7 +115,8 @@ if __name__ == "__main__":
         print("1 - Upgrade de recursos")
         print("2 - Upgrade de Edifícios")
         print("3 - Start lista de farms")
-        print("4 - Sair")
+        print("4 - Lista de atividades")
+        print("5 - Sair")
         option = input("=> ")
 
         if option == "1":
@@ -124,8 +126,8 @@ if __name__ == "__main__":
             print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Atualizando campos')
             village.update_fields_village(list_names[int(idVillage)-1], list_ids)
 
-            
-            update_resources_fields_in_level(list_names[int(idVillage)-1], toLevel, list_ids)
+            thread = threading.Thread(name=f'Update recursos para o Nível {toLevel}', target=update_resources_fields_in_level, args=(list_names[int(idVillage)-1], toLevel, list_ids))
+            thread.start()
 
         elif option == "2":
             print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Atualizando aldeia, aguarde...')
@@ -140,7 +142,8 @@ if __name__ == "__main__":
             builderUpdate = input('Id => ')
             toLevel = input('Upgrade para qual nível => ')
 
-            update_resources_fields_in_level(list_names[int(idVillage)-1], toLevel, [builderUpdate])
+            thread = threading.Thread(name=f'Construindo {village.fields[list_names[int(idVillage)-1]]["name"][x-1]} para o Nível {toLevel}', target=update_resources_fields_in_level, args=(list_names[int(idVillage)-1], toLevel, [builderUpdate]))
+            thread.start()
 
         elif option == "3":
 
@@ -151,10 +154,17 @@ if __name__ == "__main__":
             print('Digite o numero final do intervalo (em minutos:)')
             minuteEnd = input('=> ')
 
-            thread = Thread(target=start_farm_list, args=(minuteStart, minuteEnd))
+            thread = threading.Thread(name=f'Assaltando via farmlist da aldeia {list_names[int(idVillage)-1]}', target=start_farm_list, args=(minuteStart, minuteEnd))
             thread.start()
 
         elif option == "4":
+            print("____________________________________________________________")
+            print("Abaixo o que já esta sendo feito na aldeia:")
+            for t in threading.enumerate():
+                if t.name != 'MainThread':
+                    print(f'=> {t.name}')
+
+        elif option == "5":
             print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Saindo do Travian Village Bot')
             break
 
