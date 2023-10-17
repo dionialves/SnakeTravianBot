@@ -174,6 +174,18 @@ class Village(object):
         
         buttonUpgrade.click()
 
+    def start_all_farm_list(self, idVillage):
+        """
+        Nesta função iniciamos o assalto de todas as listas de farms contidas na aldeia
+        """
+
+        self.browser.get(self.villages[idVillage]['url'])
+        self.browser.get(self.server + '/build.php?id=39&gid=16&tt=99')
+
+        buttonStartAllList = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div[3]/div/div[1]/div[2]/button[1]')
+        buttonStartAllList.click()
+
+
     def check_construction_resources(self, idField):
         """
         Esta função checa se na aldeia tem os recursos necessários para a construção desejada

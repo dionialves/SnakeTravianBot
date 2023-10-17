@@ -1,7 +1,8 @@
-from village import Village
-from selenium.webdriver.common.by import By
 import time
 import datetime
+from village import Village
+from random import randint
+from threading import Thread
 
 """
 Melhorias
@@ -17,50 +18,75 @@ Melhorias
 server = "ts3.x1.america.travian.com"
 username = "diviks"
 password = "alves625"
-
+"""
+server = "ts30.x3.international.travian.com"
+username = "dionialves"
+password = "ranaeu21"
+"""
 def update_resources_fields_in_level(nameVillage, toLevel, list_ids):
-    village.update_building_orders(nameVillage)
+    while True:
 
-    if not village.building_ordens[nameVillage]:
+        village.update_building_orders(nameVillage)
 
-        for x in list_ids:
-            if int(village.fields[nameVillage]['level'][int(x)-1]) < int(toLevel):
-                print(f'{datetime.datetime.now().strftime("%I:%M")} - Construindo {village.fields[nameVillage]["name"][int(x)-1]} para o level {toLevel}')
+        if not village.building_ordens[nameVillage]:
+            for x in list_ids:
+                if int(village.fields[nameVillage]['level'][int(x)-1]) < int(toLevel):
+                    print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Construindo {village.fields[nameVillage]["name"][int(x)-1]} para o level {toLevel}')
 
-                # Atualiza os recursos da aldeia
-                village.get_resources(nameVillage)
+                    # Atualiza os recursos da aldeia
+                    village.get_resources(nameVillage)
 
-                # retorna lista com recursos necessários para fazer a construção
-                resources = village.check_construction_resources(x)
+                    # retorna lista com recursos necessários para fazer a construção
+                    resources = village.check_construction_resources(x)
 
-                if (int(village.resources[nameVillage]['lumber']) >= int(resources['lumber']) and
-                    int(village.resources[nameVillage]['clay']) >= int(resources['clay'])  and
-                    int(village.resources[nameVillage]['iron']) >= int(resources['iron'])  and
-                    int(village.resources[nameVillage]['crop']) >= int(resources['crop'])):
+                    if (int(village.resources[nameVillage]['lumber']) >= int(resources['lumber']) and
+                        int(village.resources[nameVillage]['clay']) >= int(resources['clay'])  and
+                        int(village.resources[nameVillage]['iron']) >= int(resources['iron'])  and
+                        int(village.resources[nameVillage]['crop']) >= int(resources['crop'])):
 
-                    village.upgrade_fields_resource(nameVillage, x)
-                    village.update_building_orders(nameVillage)
-                    break
-                else:
-                    print(f'{datetime.datetime.now().strftime("%I:%M")} - Sem recursos suficientes para construir')
+                        village.upgrade_fields_resource(nameVillage, x)
+                        village.update_building_orders(nameVillage)
+                        # Atualiza manualmente o nivel do campo
+                        village.fields[nameVillage]['level'][int(x)-1] = str(int(village.fields[nameVillage]['level'][int(x)-1]) + 1)
 
-    else:
-        print(f'{datetime.datetime.now().strftime("%I:%M")} - Identificado que já tem construções na fila')
+                        break
+                    else:
+                        print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Sem recursos suficientes para construir')
 
-    if village.building_ordens[nameVillage]:
-        print(f'{datetime.datetime.now().strftime("%I:%M")} - Tempo de espera: {round(int(village.building_ordens[nameVillage][0][2]) / 60 + 2, 0)} minutos')
-        time.sleep(int(village.building_ordens[nameVillage][0][2] + 120))
+        else:
+            print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Identificado que já tem construções na fila')
 
-    else:
-        if not level_up(nameVillage, toLevel):
-            print(f'{datetime.datetime.now().strftime("%I:%M")} - Sem recursos suficientes para construir, vamos aguardar 10 minutos')
-            time.sleep(600)
+        if village.building_ordens[nameVillage]:
+            print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Tempo de espera: {datetime.timedelta(minutes=int(village.building_ordens[nameVillage][0][2] / 60 + 2))} minutos')
+            time.sleep(int(village.building_ordens[nameVillage][0][2] + 120))
+
+        else:
+            if not level_up(nameVillage, toLevel):
+                print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Sem recursos suficientes para construir, vamos aguardar 10 minutos')
+                time.sleep(600)
+
+        if level_up(list_names[int(idVillage)-1], toLevel):
+            print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Construção já atingiu o nível solicitado!')
+            break
 
 def level_up(nameVillage, toLevel):
     for x in range(18):
         if int(village.fields[nameVillage]["level"][x]) < int(toLevel):
             return False
     return True
+
+def start_farm_list(timeStart, timeEnd):
+    while True:
+        village.start_all_farm_list(list_names[int(idVillage)-1])
+
+        timeStart = randint(int(minuteStart), int(timeEnd))
+        hours = datetime.datetime.now().strftime("%H:%M:%S")
+        nextStart = datetime.datetime.now() + datetime.timedelta(minutes=timeStart)
+        nextStart = nextStart.strftime("%H:%M:%S")
+
+        print(f'{hours} - Realizado o assalto, o proximo esta programado para as {nextStart} ')
+        time.sleep(timeStart*60)
+
 
 
 if __name__ == "__main__":
@@ -72,55 +98,65 @@ if __name__ == "__main__":
     time.sleep(2)
     village.update_name_villages()
 
-    """
-    Pega informação da aldeia a ser atualizada e o level dos recursos
-    """
-    print("Escolha a aldeia a evoluir: ")
-    aux = 1
-    list_names = []
-    for x in village.villages:
-        print(f'{aux} - {x}')
-        list_names.append(x)
-    idVillage = input('=> ')
-
-    print("Quais tarefas desefa fazer:")
-    print("1 - Upgrade de recursos")
-    print("2 - Upgrade de Edifícios")
-    option = input("=> ")
-
-    if option == "1":
+    while True:
         """
-        ###########################################################################
-        Upgrade de recursos
+        Pega informação da aldeia a ser atualizada e o level dos recursos
         """
-        toLevel = input("Escolha qual level deseja evoluir os recursos: ")
-        
-        """
-        Inicia o loop do programa
-        """
+        print("Escolha a aldeia a evoluir: ")
+        aux = 1
+        list_names = []
+        for x in village.villages:
+            print(f'{aux} - {x}')
+            list_names.append(x)
+        idVillage = input('=> ')
 
-        list_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
-        print(f'{datetime.datetime.now().strftime("%I:%M")} - Atualizando campos')
-        village.update_fields_village(list_names[int(idVillage)-1], list_ids)
+        print("Quais tarefas deseja fazer:")
+        print("1 - Upgrade de recursos")
+        print("2 - Upgrade de Edifícios")
+        print("3 - Start lista de farms")
+        print("4 - Sair")
+        option = input("=> ")
 
-        while True:
+        if option == "1":
+            toLevel = input("Escolha qual level deseja evoluir os recursos: ")
+
+            list_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+            print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Atualizando campos')
+            village.update_fields_village(list_names[int(idVillage)-1], list_ids)
+
+            
             update_resources_fields_in_level(list_names[int(idVillage)-1], toLevel, list_ids)
+
+        elif option == "2":
+            print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Atualizando aldeia, aguarde...')
+            village.update_fields_village(list_names[int(idVillage)-1], range(1,41))
+
+            print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Listando construções disponíveis para upgrade:')
+            for x in range(19,41):
+                
+                if village.fields[list_names[int(idVillage)-1]]['level'][x-1] != "0":
+                    print(f'id: {x} | ({village.fields[list_names[int(idVillage)-1]]["level"][x-1]}) - {village.fields[list_names[int(idVillage)-1]]["name"][x-1]}')
             
-            if level_up(list_names[int(idVillage)-1], toLevel):
-                print(f'Aldeia já atingiu o nível solicitado!')
-                break
+            builderUpdate = input('Id => ')
+            toLevel = input('Upgrade para qual nível => ')
 
-    elif option == "2":
-        village.update_fields_village(list_names[int(idVillage)-1], range(1,41))
-
-        print(f'{datetime.datetime.now().strftime("%I:%M")} - Listando construções disponíveis para upgrade:')
-        for x in range(19,41):
-            
-            if village.fields[list_names[int(idVillage)-1]]['level'][x-1] != "0":
-                print(f'id: {x} | ({village.fields[list_names[int(idVillage)-1]]["level"][x-1]}) - {village.fields[list_names[int(idVillage)-1]]["name"][x-1]}')
-        
-        builderUpdate = input('Id => ')
-        toLevel = input('Upgrade para qual nível => ')
-
-        while True:
             update_resources_fields_in_level(list_names[int(idVillage)-1], toLevel, [builderUpdate])
+
+        elif option == "3":
+
+            print('O Inicio da assalto será definido entre um intervalod de tempo, informa abaixo esse itervalo:')
+            print('Digite o numero inicial do intervalo (em minutos):')
+            minuteStart = input('=> ')
+
+            print('Digite o numero final do intervalo (em minutos:)')
+            minuteEnd = input('=> ')
+
+            thread = Thread(target=start_farm_list, args=(minuteStart, minuteEnd))
+            thread.start()
+
+        elif option == "4":
+            print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Saindo do Travian Village Bot')
+            break
+
+        else:
+            print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Por favor escolha umas das opções abaixo')
