@@ -59,7 +59,26 @@ class Village(object):
         else:
             self.is_logged = False
 
-    def update_fields_village(self, village, list_ids):
+    def update_fields_village(self, village, idsFields):
+        """
+            Atuliza os campos de construção da aldeia, conforme o id passado pela na função.
+        """
+
+        self.browser.get(self.villages[village]['url'])
+
+        for id in idsFields:
+            self.browser.get(f'{self.server}/build.php?id={id}')
+            name = self.browser.find_elements(By.XPATH, '//*[@id="content"]/h1')[0].text
+
+            if self.browser.find_elements(By.CLASS_NAME, 'buildingWrapper'):
+                name_and_level = ['Zona Livre', '0']
+            else:
+                name_and_level = self.separate_name(name)
+
+            self.fields[village]['name'][int(id)-1] = name_and_level[0]
+            self.fields[village]['level'][int(id)-1] = name_and_level[1]
+
+    def update_all_fields_village(self, village):
         """
             Atuliza todos os campos de construção da aldeia, do 1 ao 40. De uma aldeia em uma aldeia específica
         """
@@ -69,7 +88,7 @@ class Village(object):
 
         self.browser.get(self.villages[village]['url'])
 
-        for x in list_ids:
+        for x in range(1,41):
             self.browser.get(f'{self.server}/build.php?id={x}')
             name = self.browser.find_elements(By.XPATH, '//*[@id="content"]/h1')[0].text
 
@@ -85,6 +104,7 @@ class Village(object):
         fields['level'] = list_level
 
         self.fields[village] = fields
+
 
     def update_name_villages(self):
         """

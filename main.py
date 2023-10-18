@@ -26,11 +26,15 @@ password = "ranaeu21"
 def update_resources_fields_in_level(nameVillage, toLevel, list_ids):
     while True:
         village.update_building_orders(nameVillage)
-
+        
         if not village.building_ordens[nameVillage]:
             for x in list_ids:
+
+                #atualiza o campo em específico
+                village.update_fields_village(nameVillage, [x])
+
+                # Verifica se ele esta abaixo do nível desejado
                 if int(village.fields[nameVillage]['level'][int(x)-1]) < int(toLevel):
-                    print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Construindo {village.fields[nameVillage]["name"][int(x)-1]} para o level {toLevel}')
 
                     # Atualiza os recursos da aldeia
                     village.get_resources(nameVillage)
@@ -38,6 +42,7 @@ def update_resources_fields_in_level(nameVillage, toLevel, list_ids):
                     # retorna lista com recursos necessários para fazer a construção
                     resources = village.check_construction_resources(x)
 
+                    # Verifica se tem os rercursos necessário para fazer a construção
                     if (int(village.resources[nameVillage]['lumber']) >= int(resources['lumber']) and
                         int(village.resources[nameVillage]['clay']) >= int(resources['clay'])  and
                         int(village.resources[nameVillage]['iron']) >= int(resources['iron'])  and
@@ -45,12 +50,17 @@ def update_resources_fields_in_level(nameVillage, toLevel, list_ids):
 
                         village.upgrade_fields_resource(nameVillage, x)
                         village.update_building_orders(nameVillage)
-                        # Atualiza manualmente o nivel do campo
-                        village.fields[nameVillage]['level'][int(x)-1] = str(int(village.fields[nameVillage]['level'][int(x)-1]) + 1)
+
+                        print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Construindo {village.fields[nameVillage]["name"][int(x)-1]} para o level {village.fields[nameVillage]["level"][int(x)-1]}')
 
                         break
                     else:
-                        print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Sem recursos suficientes para construir')
+                        print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Sem recursos suficientes para construir, vamos aguardar 10 minutos')
+                        time.sleep(600)
+
+                else:
+                    print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Construção já atingiu o nível solicitado!')
+                    break
 
         else:
             print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Identificado que já tem construções na fila')
@@ -59,20 +69,6 @@ def update_resources_fields_in_level(nameVillage, toLevel, list_ids):
             print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Tempo de espera: {datetime.timedelta(minutes=int(village.building_ordens[nameVillage][0][2] / 60 + 2))} minutos')
             time.sleep(int(village.building_ordens[nameVillage][0][2] + 120))
 
-        else:
-            if not level_up(nameVillage, toLevel):
-                print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Sem recursos suficientes para construir, vamos aguardar 10 minutos')
-                time.sleep(600)
-
-        if level_up(list_names[int(idVillage)-1], toLevel):
-            print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Construção já atingiu o nível solicitado!')
-            break
-
-def level_up(nameVillage, toLevel):
-    for x in range(18):
-        if int(village.fields[nameVillage]["level"][x]) < int(toLevel):
-            return False
-    return True
 
 def start_farm_list(timeStart, timeEnd):
     while True:
@@ -96,7 +92,7 @@ if __name__ == "__main__":
     village.login(server, username, password)
     time.sleep(2)
     village.update_name_villages()
-
+    
     while True:
         """
         Pega informação da aldeia a ser atualizada e o level dos recursos
@@ -124,14 +120,14 @@ if __name__ == "__main__":
 
             list_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
             print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Atualizando campos')
-            village.update_fields_village(list_names[int(idVillage)-1], list_ids)
+            village.update_all_fields_village(list_names[int(idVillage)-1])
 
             thread = threading.Thread(name=f'Update recursos para o Nível {toLevel}', target=update_resources_fields_in_level, args=(list_names[int(idVillage)-1], toLevel, list_ids))
             thread.start()
 
         elif option == "2":
             print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Atualizando aldeia, aguarde...')
-            village.update_fields_village(list_names[int(idVillage)-1], range(1,41))
+            village.update_all_fields_village(list_names[int(idVillage)-1])
 
             print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Listando construções disponíveis para upgrade:')
             for x in range(19,41):
