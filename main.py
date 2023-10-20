@@ -1,9 +1,11 @@
+import os
 import time
 import datetime
-import tkinter as tk
-from village import Village
-from random import randint
 import threading
+import tkinter as tk
+from random import randint
+
+from models.village import Village
 
 """
 Melhorias
@@ -12,66 +14,83 @@ Melhorias
   usuário deseja atualizar para o level 5, fazer seguenciamente, primeiro, todos
   par ao level 4 e depois para o level 5!
 
+- Tratar erros quando o selenium por qualquer motivo não encontra o elemento
+
 - Colocar as mensagens em um novo terminal
+
+- Quando tem mais de um id para fazer o upgrade, 
 """
 
-class MenssageOutput(object):
-    def __init__(self):
-        self.root = tk.Tk()
-        self.text = tk.Text(self.root, bg = 'black', fg='white', height=20, width=80)
-        self.text.pack(side=tk.LEFT, fill=tk.Y)
 
 
-    def inset_text(self, text):
-        self.text.insert(tk.END, text)
-        
-def update_resources_fields_in_level(village, nameVillage, toLevel, list_of_ids):
+"""
+Essa função é responsável por atualizar um grupo de slots até determinado level, será usada para evoluir campos recursos
+pois serão feitos de forma sequencial.
+
+Funções usada para esse processo:
+
+-> update_resources_fields_in_level
+-> check_resources_for_construction
+-> slot_construction
+"""
+
+def update_resources_fields_in_level(village, name_village, toLevel, list_of_ids):
+    for level in range(1, int(toLevel)+1):
+        for id_field in list_of_ids:
+            if int(village.fields[name_village]["level"][int(id_field)-1]) < int(level):
+                upgrade_slot_to_level(village, name_village, id_field, level)
+
+    
+def check_resources_for_construction(village, name_village, id_field):
+    # Atualiza os recursos da aldeia
+    print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Atualizando quantidades de recursos na aldeia')
+    village.get_resources(name_village)
+
+    # retorna lista com recursos necessários para fazer a construção
+    resources = village.check_construction_resources(id_field)
+
+    # Verifica se tem os rercursos necessário para fazer a construção
+    if (int(village.resources[name_village]['lumber']) >= int(resources['lumber']) and
+        int(village.resources[name_village]['clay']) >= int(resources['clay'])  and
+        int(village.resources[name_village]['iron']) >= int(resources['iron'])  and
+        int(village.resources[name_village]['crop']) >= int(resources['crop'])):
+        return True
+    else:
+        return False
+    
+"""
+Esta função será utiliza para realizar o upgrade de um determinado edificio até o nível desejado.
+Serão usados para isso os slots que já possuirem uma construção 
+"""
+def upgrade_slot_to_level(village, name_village, id_field, level):
+
     while True:
-        village.update_building_orders(nameVillage)
+        #atualiza o campo em específico 
+        village.update_fields_village(name_village, [id_field])
         
-        if not village.building_ordens[nameVillage]:
-            for x in list_of_ids:
+        if int(village.fields[name_village]['level'][int(id_field)-1]) >= int(level):
+            # Verifica se ele esta abaixo do nível desejado
+            print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - {village.fields[name_village]["name"][int(id_field)-1]} já atingiu o nível solicitado!')
+            break
 
-                #atualiza o campo em específico
-                village.update_fields_village(nameVillage, [x])
-
-                # Verifica se ele esta abaixo do nível desejado
-                if int(village.fields[nameVillage]['level'][int(x)-1]) < int(toLevel):
-
-                    # Atualiza os recursos da aldeia
-                    village.get_resources(nameVillage)
-
-                    # retorna lista com recursos necessários para fazer a construção
-                    resources = village.check_construction_resources(x)
-
-                    # Verifica se tem os rercursos necessário para fazer a construção
-                    if (int(village.resources[nameVillage]['lumber']) >= int(resources['lumber']) and
-                        int(village.resources[nameVillage]['clay']) >= int(resources['clay'])  and
-                        int(village.resources[nameVillage]['iron']) >= int(resources['iron'])  and
-                        int(village.resources[nameVillage]['crop']) >= int(resources['crop'])):
-
-                        village.upgrade_fields_resource(nameVillage, x)
-                        village.update_building_orders(nameVillage)
-
-                        print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Construindo {village.fields[nameVillage]["name"][int(x)-1]} para o level {int(village.fields[nameVillage]["level"][int(x)-1])+1}')
-
-                        break
-                    else:
-                        print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Sem recursos suficientes para construir, vamos aguardar 10 minutos')
-                        time.sleep(600)
-
-                else:
-                    # Verifica se ele esta abaixo do nível desejado
-                    print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Construção já atingiu o nível solicitado!')
-                    break
-
+        village.update_building_orders(name_village)
+        if village.building_ordens[name_village]:
+            print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Construção na fila, tempo de espera: {datetime.timedelta(minutes=int(village.building_ordens[name_village][0][2] / 60 + 2))} minutos')
+            time.sleep(int(village.building_ordens[name_village][0][2] + 120))
         else:
-            print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Identificado que já tem construções na fila')
+            # Entra na função para fazer a verificação se tem recursos para update
+            if check_resources_for_construction(village, name_village, id_field):
+                village.upgrade_fields_resource(name_village, id_field)
 
-        if village.building_ordens[nameVillage]:
-            print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Tempo de espera: {datetime.timedelta(minutes=int(village.building_ordens[nameVillage][0][2] / 60 + 2))} minutos')
-            time.sleep(int(village.building_ordens[nameVillage][0][2] + 120))
+                print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Construindo {village.fields[name_village]["name"][int(id_field)-1]} para o level {int(village.fields[name_village]["level"][int(id_field)-1])+1}')
+            else:
+                print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Sem recursos suficientes para construir, vamos aguardar 10 minutos')
+                time.sleep(600)
 
+
+"""
+Esta função será utilizada para iniciar assaltos e usará como base a lista de farms de cada vila
+"""
 def start_farm_list(village, name_village, minuteStart, minuteEnd):
     while True:
         village.start_all_farm_list(name_village)
@@ -84,6 +103,10 @@ def start_farm_list(village, name_village, minuteStart, minuteEnd):
         print(f'{hours} - Realizado o assalto, o proximo esta programado para as {nextStart} ')
         time.sleep(timeStart*60)
 
+
+"""
+As funções abaixo serão utilizadas para manipulação dos menus do sistema
+"""
 def get_information_on_account():
     print("Forneça as informações do servidor: ")
     server = input('Server => ')
@@ -101,35 +124,64 @@ def login_on_server(server, username, password):
 
     return village
 
+
 """ Funções relacionadas ao Menu"""
 def menu():
-    print("____________________________________________________________")
-    print("Escolha a aldeia a evoluir: ")
-    aux = 1
-    list_names = []
-    for x in village.villages:
-        print(f'{aux} - {x}')
-        list_names.append(x)
-    idVillage = input('=> ')
-    name_village = list_names[int(idVillage)-1]
+    while True:
+        print("____________________________________________________________")
+        print("Escolha a aldeia a evoluir: ")
+        
+        list_names = []
+        aux = 1
+        for x in village.villages:
+            print(f'{aux} - {x}')
+            list_names.append(x)
+            aux = aux + 1
 
-    print("Quais tarefas deseja fazer:")
-    print("1 - Upgrade de recursos")
-    print("2 - Upgrade de Edifícios")
-    print("3 - Start lista de farms")
-    print("4 - Lista de atividades")
-    print("5 - Sair")
-    option = input("=> ")
+        idVillage = input('=> ')
+        try:
+            if int(idVillage) >= 1:
+                name_village = list_names[int(idVillage)-1]
+                break
+        except:
+            print('Escolha uma das aldeias listada acima!')
+
+    os.system('cls')
+    option = ""
+    while (option not in ('1', '2', '3', '4', '5')):
+
+        print("Quais tarefas deseja fazer:")
+        print("1 - Upgrade de recursos")
+        print("2 - Upgrade de Edifícios")
+        print("3 - Start lista de farms")
+        print("4 - Lista de atividades")
+        print("5 - Sair")
+        option = input("=> ")
 
     return name_village, option
 
 def menu_update_fields(village, name_village):
+        print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Atualizando campos')
+        village.update_all_fields_village(name_village)
+
+        print("Deseja evoluir quais tipos de recurso: ")
+        print("1 - Apenas Cereal")
+        print("2 - Apenas Madeira, Barro e Ferro")
+        print("3 - Todos os recuros")
+        option_resources = input("=> ")
+
         print("Escolha qual level deseja evoluir os recursos: ")
         toLevel = input('=> ')
 
-        fields_id = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
-        print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Atualizando campos')
-        village.update_all_fields_village(name_village)
+        match option_resources:
+            case "1":
+                fields_id = village.get_only_crop(name_village)
+            case "2":
+                fields_id = village.get_no_crop(name_village)
+            case "3":
+                fields_id = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+            case _:
+                pass
 
         thread = threading.Thread(name=f'Update recursos para o Nível {toLevel}', 
                                   target=update_resources_fields_in_level, 
@@ -137,9 +189,9 @@ def menu_update_fields(village, name_village):
         thread.start()
 
 def menu_update_buildings(village, name_village):
-        print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Atualizando aldeia, aguarde...')
+        print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Atualizando campos')
         village.update_all_fields_village(name_village)
-
+        
         print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Listando construções disponíveis para upgrade:')
         for x in range(19,41):
             
@@ -150,8 +202,8 @@ def menu_update_buildings(village, name_village):
         toLevel = input('Upgrade para qual nível => ')
 
         thread = threading.Thread(name=f'Construindo {village.fields[name_village]["name"][x-1]} para o Nível {toLevel}', 
-                                  target=update_resources_fields_in_level, 
-                                  args=(village, name_village, toLevel, [builder_id]))
+                                  target=upgrade_slot_to_level, 
+                                  args=(village, name_village, builder_id, toLevel))
         thread.start()
 
 def menu_start_farmlist(village, name_village):
@@ -178,9 +230,13 @@ def menu_quit_of_system():
     print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Saindo do Travian Village Bot')
 
 
+
 if __name__ == "__main__":
+    os.system('cls')
     server, username, password = get_information_on_account()
     village = login_on_server(server, username, password)
+
+    print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Logado na conta, bom jogo')
 
     while True:
         name_village, option = menu()

@@ -4,6 +4,25 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 
+BUILDING = {
+    '1': 'lumber',
+    '2': 'clay',
+    '3': 'iron',
+    '4': 'crop',
+    '10': 'warehouse',
+    '11': 'Granary',
+    '13': 'Smithy',
+    '15': 'Main Building',
+    '17': 'Marketplace',
+    '18': 'Embassy',
+    '19': 'Barracks',
+    '20': 'Stable',
+    '22': 'Academy',
+    '23': 'Cranny',
+    '25': 'Residence',
+    '34': "Stonemason's Lodge"
+}
+
 class Village(object):
     def __init__(self):
         self.server = str()
@@ -59,6 +78,45 @@ class Village(object):
         else:
             self.is_logged = False
 
+    def update_all_fields_village(self, village):
+        """
+            Atuliza todos os campos de construção da aldeia, do 1 ao 40. De uma aldeia em uma aldeia específica
+        """
+        fields = {}
+        list_fields = []
+        list_level = []
+        list_slot_id = []
+        list_building_id = []
+
+        self.browser.get(self.villages[village]['url'])
+
+        for x in range(1,41):
+            self.browser.get(f'{self.server}/build.php?id={x}')
+
+            # Obtem o Id do da construção
+            url = self.browser.current_url.split('?')[1]
+            slot_id = url.split('&')[0].split('=')[1]
+
+            name = self.browser.find_elements(By.XPATH, '//*[@id="content"]/h1')[0].text
+
+            if self.browser.find_elements(By.CLASS_NAME, 'buildingWrapper'):
+                name_and_level = ['Zona Livre', '0']
+            else:
+                name_and_level = self.separate_name(name)
+                building_id = url.split('&')[1].split('=')[1]
+
+            list_slot_id.append(slot_id)
+            list_building_id.append(building_id)
+            list_fields.append(name_and_level[0])
+            list_level.append(name_and_level[1])
+
+        fields['slot'] = list_slot_id
+        fields['id'] = list_building_id
+        fields['name'] = list_fields
+        fields['level'] = list_level
+
+        self.fields[village] = fields
+
     def update_fields_village(self, village, idsFields):
         """
             Atuliza os campos de construção da aldeia, conforme o id passado pela na função.
@@ -68,6 +126,13 @@ class Village(object):
 
         for id in idsFields:
             self.browser.get(f'{self.server}/build.php?id={id}')
+
+            # Obtem o Id do da construção
+            url = self.browser.current_url.split('?')[1]
+            slot_id = url.split('&')[1].split('=')[0]
+            building_id = url.split('&')[1].split('=')[1]
+
+            # Pega o titulo da pagina para obter o level da construção
             name = self.browser.find_elements(By.XPATH, '//*[@id="content"]/h1')[0].text
 
             if self.browser.find_elements(By.CLASS_NAME, 'buildingWrapper'):
@@ -75,35 +140,10 @@ class Village(object):
             else:
                 name_and_level = self.separate_name(name)
 
+            self.fields[village]['slot'][int(id)-1] = slot_id
+            self.fields[village]['id'][int(id)-1] = building_id
             self.fields[village]['name'][int(id)-1] = name_and_level[0]
             self.fields[village]['level'][int(id)-1] = name_and_level[1]
-
-    def update_all_fields_village(self, village):
-        """
-            Atuliza todos os campos de construção da aldeia, do 1 ao 40. De uma aldeia em uma aldeia específica
-        """
-        fields = {}
-        list_fields = []
-        list_level = []
-
-        self.browser.get(self.villages[village]['url'])
-
-        for x in range(1,41):
-            self.browser.get(f'{self.server}/build.php?id={x}')
-            name = self.browser.find_elements(By.XPATH, '//*[@id="content"]/h1')[0].text
-
-            if self.browser.find_elements(By.CLASS_NAME, 'buildingWrapper'):
-                name_and_level = ['Zona Livre', '0']
-            else:
-                name_and_level = self.separate_name(name)
-
-            list_fields.append(name_and_level[0])
-            list_level.append(name_and_level[1])
-
-        fields['name'] = list_fields
-        fields['level'] = list_level
-
-        self.fields[village] = fields
 
 
     def update_name_villages(self):
@@ -177,10 +217,10 @@ class Village(object):
         crop = self.browser.find_element(By.ID, 'l4').text
 
         self.resources[village] = {
-            "lumber": lumber.replace('.', ''),
-            "clay": clay.replace('.', ''),
-            "iron": iron.replace('.', ''),
-            "crop": crop.replace('.', '')
+            "lumber": lumber.replace(',', '').replace('.', ''),
+            "clay": clay.replace(',', '').replace('.', ''),
+            "iron": iron.replace(',', '').replace('.', ''),
+            "crop": crop.replace(',', '').replace('.', '')
         }
 
     def upgrade_fields_resource(self, village, idField):
@@ -217,9 +257,33 @@ class Village(object):
         clay = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[1]/div[1]/div[2]/span').text
         iron = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[1]/div[1]/div[3]/span').text
         crop = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[1]/div[1]/div[4]/span').text
-    
-        return {'lumber': lumber.replace('.', ''), 'clay': clay.replace('.', ''), 'iron': iron.replace('.', ''), 'crop': crop.replace('.', '')}
 
+        lumber = lumber.replace(',', '').replace('.', '')
+        clay = clay.replace(',', '').replace('.', '')
+        iron = iron.replace(',', '').replace('.', '')
+        crop = crop.replace(',', '').replace('.', '')
+
+        return {'lumber': lumber, 'clay': clay, 'iron': iron, 'crop': crop}
+
+    def get_only_crop(self, village):
+        list_id_crop = []
+
+        for x in range(0,40):
+            id = self.fields[village]['id'][x]
+            if id == '4':
+                list_id_crop.append(self.fields[village]['slot'][x])
+
+        return list_id_crop
+    
+    def get_no_crop(self, village):
+        list_id_no_crop = []
+
+        for x in range(0,40):
+            id = self.fields[village]['id'][x]
+            if id in ('1', '2', '3',):
+                list_id_no_crop.append(self.fields[village]['slot'][x])
+
+        return list_id_no_crop
 
     def separate_name(self, name):
         """
