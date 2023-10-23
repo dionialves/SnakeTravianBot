@@ -29,8 +29,6 @@ class Village(object):
         self.username = str()
         self.password = str()
         self.browser = None
-        self.is_logged = False
-
         self.villages = {}
         self.fields = {}
         self.building_ordens = {}
@@ -67,18 +65,6 @@ class Village(object):
         password.send_keys(self.password)
 
         self.browser.find_element(By.XPATH, "/html/body/div[3]/div[2]/div[2]/div[2]/div/div/div[1]/form/table/tbody/tr[5]/td[2]/button").click()
-
-        self.check_for_login()
-
-    def check_for_login(self):
-        """
-            Verifica se o objeto realmente esta logado no servidor
-        """
-        if self.browser.current_url == self.server + '/dorf1.php':
-            self.is_logged = True
-
-        else:
-            self.is_logged = False
 
     def update_all_fields_village(self, village):
         """
@@ -301,10 +287,10 @@ class Village(object):
 
         return secunds
 
-    def close_browser(self, *args):
+    def quit(self, *args):
         """
         Responsável por fechar o navegador interno
         """
         
-        self.is_logged = False
+        self.browser.get(f'{self.server}/logout')
         self.browser.close()

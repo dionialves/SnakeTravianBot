@@ -7,29 +7,6 @@ from random import randint
 
 from models.village import Village
 
-"""
-Melhorias a serem efetuadas
-
-- Tratar erros quando o selenium por qualquer motivo não encontra o elemento
-- Colocar as thrends de construção em uma fila
-- Poder excluir uma thrend (Ordens)
-- Colocar log em um arquivo e criar um menu para visualiar o mesmo
-- Melhorar armamento de tropas
-- Construções usando os recursos do herois
-- Aventuras automáticas do heroi
-- Deslogar na conta para simular um período sem acesso ao jogo
-- No upgrade de edificios quando colocado um id que não esta na lista, retorna erro
-- Melhorar descrição das theads para saber qual é de cada aldeia
-- Upgrade automatico das tropas
-- Menu para sair do sistemas
-
-Melhorias feitas
-
-
-
-"""
-
-
 
 """
 Essa função é responsável por atualizar um grupo de slots até determinado level, será usada para evoluir campos recursos
@@ -166,28 +143,39 @@ def menu():
         print("____________________________________________________________")
         print("Escolha a aldeia a evoluir: ")
         print('')
+        name_village = ''
         list_names = []
         aux = 1
         for x in village.villages:
             print(f'{aux} - {x}')
             list_names.append(x)
             aux = aux + 1
+        print('')
+        print(f'{len(village.villages)+1} - Sair')
         idVillage = input('=> ')
 
+        if idVillage == str(len(village.villages) + 1):
+            break
+
         try:
-            if int(idVillage) >= 1:
-                name_village = list_names[int(idVillage)-1]
-                get_database(village, name_village)
-                break
+            name_village = list_names[int(idVillage)-1]
+            get_database(village, name_village)
+            break
         except:
             print('Escolha uma das aldeias listada acima!')
 
-    os.system('cls')
+    return name_village
+
+def menu_of_village(village, name_village):
+    
     option = ""
-    while (option not in ('1', '2', '3', '4', '5')):
+    while True:
+        os.system('cls')
+        print(F'{name_village}')
         print("____________________________________________________________")
-        print(F'{name_village} -> Escolha uma das opções:')
+        print('Menu -> Menu Principal')
         print('')
+        
         print("1 - Recursos e Edifícios")
         print("2 - Atualizar Aldeia")
         print("3 - Start lista de farms")
@@ -195,14 +183,27 @@ def menu():
         print("5 - Sair")
         option = input("=> ")
 
-    return name_village, option
+        match option:
+            case "1": 
+                resorurses_and_buildings(village, name_village)
+            case "2":
+                menu_update_village(village, name_village)
+            case "3":
+                menu_start_farmlist(village, name_village)
+            case "4":
+                menu_activities_list()
+            case "5":
+                break
+            case _:
+                print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Por favor escolha umas das opções abaixo')
+
 
 def resorurses_and_buildings(village, name_village):
-        os.system('cls')
         while True:
-            print('CAMPOS DE RECURSOS E EDIFICAÇÕES')
+            os.system('cls')
+            print(F'{name_village}')
             print("____________________________________________________________")
-            print("Escolha uma das opções:")
+            print('Menu -> Menu Principal -> Recursos e Edificações')
             print('')
             print('1 - Listar Campos de Recursos')
             print('2 - Listar Edifícios')
@@ -215,27 +216,34 @@ def resorurses_and_buildings(village, name_village):
             match option:
                 case '1':
                     os.system('cls')
+                    print(F'{name_village}')
                     print("____________________________________________________________")
-                    print('Abaixo lista de campos de recursos:')
+                    print('Menu -> Menu Principal -> Recursos e Edificações -> Listar Campos de Recursos')
                     print('')
                     for slot in range(0, 18):
                         print(f'({village.fields[name_village]["level"][int(slot)]}) {village.fields[name_village]["name"][int(slot)]}')
-                    print("____________________________________________________________")
+                    
+                    print('')
+                    input('Precione qualquer tecla para sair')
 
                 case '2':
                     os.system('cls')
+                    print(F'{name_village}')
                     print("____________________________________________________________")
-                    print('Abaixo lista de Edificações:')
+                    print('Menu -> Menu Principal -> Recursos e Edificações -> Listar Edificios')
                     print('')
                     for slot in range(18, 40):
                         print(f'id: {int(slot + 1)} - ({village.fields[name_village]["level"][int(slot)]}) {village.fields[name_village]["name"][int(slot)]}')
-                    print("____________________________________________________________")
+                    
+                    print('')
+                    input('Precione qualquer tecla para sair')
 
                 case '3':
                     while True:
                         os.system('cls')
+                        print(F'{name_village}')
                         print("____________________________________________________________")
-                        print("Deseja evoluir quais tipos de recurso: ")
+                        print('Menu -> Menu Principal -> Recursos e Edificações -> Update Campos de Recursos')
                         print('')
                         print("1 - Apenas Cereal")
                         print("2 - Apenas Madeira, Barro e Ferro")
@@ -255,7 +263,7 @@ def resorurses_and_buildings(village, name_village):
                             case _:
                                 pass
                         if option and toLevel:
-                            thread = threading.Thread(name=f'Update recursos para o Nível {toLevel}', 
+                            thread = threading.Thread(name=f'{name_village} - Update recursos para o Nível {toLevel}', 
                                                     target=update_resources_fields_in_level, 
                                                     args=(village, name_village, toLevel, fields_id))
                             thread.start()
@@ -264,8 +272,9 @@ def resorurses_and_buildings(village, name_village):
                 case '4':
                     while True:
                         os.system('cls')
+                        print(F'{name_village}')
                         print("____________________________________________________________")
-                        print("Listando construções disponíveis para upgrade:: ")
+                        print('Menu -> Menu Principal -> Recursos e Edificações -> Update Edifícios')
                         print('')
                         for slot in range(18,40):
                             
@@ -276,7 +285,7 @@ def resorurses_and_buildings(village, name_village):
                         toLevel = input('Upgrade para qual nível => ')
 
                         if builder_id and toLevel:
-                            thread = threading.Thread(name=f'Construindo {village.fields[name_village]["name"][int(builder_id)-1]} para o Nível {toLevel}', 
+                            thread = threading.Thread(f'{name_village} - Construindo {village.fields[name_village]["name"][int(builder_id)-1]} para o Nível {toLevel}', 
                                                     target=upgrade_slot_to_level, 
                                                     args=(village, name_village, builder_id, toLevel))
                             thread.start()
@@ -301,21 +310,47 @@ def menu_start_farmlist(village, name_village):
     print('Digite o numero final do intervalo (em minutos:)')
     minuteEnd = input('=> ')
 
-    thread = threading.Thread(name=f'Assaltando via farmlist da aldeia {name_village}', 
+    thread = threading.Thread(name=f'{name_village} - Ativado auto farmlist', 
                               target=start_farm_list, 
                               args=(village, name_village, minuteStart, minuteEnd))
     thread.start()
 
 def menu_activities_list():
-    print("____________________________________________________________")
-    print("Abaixo o que já esta sendo feito na aldeia:")
-    for t in threading.enumerate():
-        if t.name != 'MainThread':
-            print(f'=> {t.name}')
+    
+    while True:
+        os.system('cls')
+        print(F'{name_village}')
+        print("____________________________________________________________")
+        print('Menu -> Menu Principal -> Lista de Atividades')
+        print('')
 
-def menu_quit_of_system():
+        print("1 - Listar Atividades")
+        print("2 - Excluir uma atividade")
+        print("3 - sair")
+
+        option = input('=> ')
+
+        match option:
+            case "1":
+                os.system('cls')
+                print(F'{name_village}')
+                print("____________________________________________________________")
+                print('Menu -> Menu Principal -> Lista de Atividades - Listar')
+                print('')
+                for thread in threading.enumerate():
+                    if thread.name != 'MainThread':
+                        if name_village in thread.name:
+                            print(f'=> {thread.name}')
+                print('')
+                input('Precione qualquer tecla para sair')
+            case "2":
+                pass
+            case "3":
+                break
+
+def menu_quit_of_system(village):
     print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Saindo do Travian Village Bot')
-
+    village.quit()
 
 
 if __name__ == "__main__":
@@ -328,19 +363,9 @@ if __name__ == "__main__":
     os.system('cls')
 
     while True:
-        name_village, option = menu()
-
-        match option:
-            case "1": 
-                resorurses_and_buildings(village, name_village)
-            case "2":
-                menu_update_village(village, name_village)
-            case "3":
-                menu_start_farmlist(village, name_village)
-            case "4":
-                menu_activities_list()
-            case "5":
-                menu_quit_of_system()
-                break
-            case _:
-                print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Por favor escolha umas das opções abaixo')
+        name_village = menu()
+        if name_village:
+            menu_of_village(village, name_village)
+        else:
+            menu_quit_of_system(village)
+            break
