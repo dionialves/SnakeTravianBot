@@ -1,2 +1,5 @@
 .tool-versions
 __pycache__
+diviks.database
+venv
+dist

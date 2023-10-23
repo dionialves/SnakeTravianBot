@@ -41,8 +41,10 @@ class Village(object):
         """
         Essa função é responsável por inicializar a instancia do navegador
         """
-
-        self.browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+        options = webdriver.ChromeOptions()
+        options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        options.add_argument("--headless=new")
+        self.browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         self.browser.implicitly_wait(1)
 
     def login(self, server, username, password):
@@ -129,7 +131,7 @@ class Village(object):
 
             # Obtem o Id do da construção
             url = self.browser.current_url.split('?')[1]
-            slot_id = url.split('&')[1].split('=')[0]
+            slot_id = url.split('&')[0].split('=')[1]
             building_id = url.split('&')[1].split('=')[1]
 
             # Pega o titulo da pagina para obter o level da construção
@@ -164,15 +166,14 @@ class Village(object):
                 if aux and (aux[:1] != '('):
                     list_village.append(aux)
 
-        for village in list_village:
+        for x in range(0, len(list_village)):
 
-            xpathUrl = self.browser.find_elements(By.XPATH, '//*[@id="overview"]/tbody/tr/td[1]/a')
-            for i in xpathUrl: url = i.get_attribute("href")
+            xpathUrl = self.browser.find_element(By.XPATH, f'//*[@id="overview"]/tbody/tr[{x+1}]/td[1]/a')
 
+            url = xpathUrl.get_attribute("href")
             id_village = url.split('=')[1]
 
-            self.villages[village] = {'url': url,
-                                      'id': id_village}
+            self.villages[list_village[x]] = {'url': url, 'id': id_village}
 
     def update_building_orders(self, village):
         """
