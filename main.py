@@ -140,6 +140,7 @@ def login_on_server(server, username, password):
 """ Funções relacionadas ao Menu"""
 def menu():
     while True:
+        os.system('cls')
         print("____________________________________________________________")
         print("Escolha a aldeia a evoluir: ")
         print('')
@@ -285,7 +286,7 @@ def resorurses_and_buildings(village, name_village):
                         toLevel = input('Upgrade para qual nível => ')
 
                         if builder_id and toLevel:
-                            thread = threading.Thread(f'{name_village} - Construindo {village.fields[name_village]["name"][int(builder_id)-1]} para o Nível {toLevel}', 
+                            thread = threading.Thread(name=f'{name_village} - Construindo {village.fields[name_village]["name"][int(builder_id)-1]} para o Nível {toLevel}', 
                                                     target=upgrade_slot_to_level, 
                                                     args=(village, name_village, builder_id, toLevel))
                             thread.start()
