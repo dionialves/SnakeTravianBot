@@ -1,5 +1,6 @@
 .tool-versions
 __pycache__
 diviks.database
+diviks.logs
 venv
 dist

@@ -25,13 +25,15 @@ def update_resources_fields_in_level(village, name_village, toLevel, list_of_ids
             if int(village.fields[name_village]["level"][int(id_field)-1]) < int(level):
                 upgrade_slot_to_level(village, name_village, id_field, level)
     
-    time.sleep(2)         
-    print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Todos os recursos já foram atualizados para o level {toLevel}')
+    time.sleep(2)   
+    message = f'{datetime.datetime.now().strftime("%H:%M:%S")} - Todos os recursos já foram atualizados para o level {toLevel}'
+    log(village, message)
     
 
 def check_resources_for_construction(village, name_village, id_field):
     # Atualiza os recursos da aldeia
-    print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Atualizando quantidades de recursos na aldeia')
+    message = f'{datetime.datetime.now().strftime("%H:%M:%S")} - Atualizando quantidades de recursos na aldeia'
+    log(village, message)
     village.get_resources(name_village)
 
     # retorna lista com recursos necessários para fazer a construção
@@ -59,21 +61,25 @@ def upgrade_slot_to_level(village, name_village, id_field, level):
 
         if int(village.fields[name_village]['level'][int(id_field)-1]) >= int(level):
             # Verifica se ele esta abaixo do nível desejado
-            print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - {village.fields[name_village]["name"][int(id_field)-1]} já atingiu o nível solicitado!')
+            message = f'{datetime.datetime.now().strftime("%H:%M:%S")} - {village.fields[name_village]["name"][int(id_field)-1]} já atingiu o nível solicitado!'
+            log(village, message)
             break
 
         village.update_building_orders(name_village)
         if village.building_ordens[name_village]:
-            print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Construção na fila, tempo de espera: {datetime.timedelta(minutes=int(village.building_ordens[name_village][0][2] / 60 + 2))} minutos')
+            message = f'{datetime.datetime.now().strftime("%H:%M:%S")} - Construção na fila, tempo de espera: {datetime.timedelta(minutes=int(village.building_ordens[name_village][0][2] / 60 + 2))} minutos'
+            log(village, message)
             time.sleep(int(village.building_ordens[name_village][0][2] + 120))
         else:
             # Entra na função para fazer a verificação se tem recursos para update
             if check_resources_for_construction(village, name_village, id_field):
                 village.upgrade_fields_resource(name_village, id_field)
 
-                print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Construindo {village.fields[name_village]["name"][int(id_field)-1]} para o level {int(village.fields[name_village]["level"][int(id_field)-1])+1}')
+                message = f'{datetime.datetime.now().strftime("%H:%M:%S")} - Construindo {village.fields[name_village]["name"][int(id_field)-1]} para o level {int(village.fields[name_village]["level"][int(id_field)-1])+1}'
+                log(village, message)
             else:
-                print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Sem recursos suficientes para construir, vamos aguardar 10 minutos')
+                message = f'{datetime.datetime.now().strftime("%H:%M:%S")} - Sem recursos suficientes para construir, vamos aguardar 10 minutos'
+                log(village, message)
                 time.sleep(600)
 
 """
@@ -88,13 +94,17 @@ def start_farm_list(village, name_village, minuteStart, minuteEnd):
         nextStart = datetime.datetime.now() + datetime.timedelta(minutes=timeStart)
         nextStart = nextStart.strftime("%H:%M:%S")
 
-        print(f'{hours} - Realizado o assalto, o proximo esta programado para as {nextStart} ')
+        message = f'{hours} - Realizado o assalto, o proximo esta programado para as {nextStart}'
+        log(village, message)
         time.sleep(timeStart*60)
 
 def get_database(village, name_village):
-    print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Verificando database')
+    message = f'{datetime.datetime.now().strftime("%H:%M:%S")} - Verificando database'
+    log(village, message)
     if os.path.isfile(f'{village.username}.database'):
-        print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Carregado database com sucesso')
+        message = f'{datetime.datetime.now().strftime("%H:%M:%S")} - Carregado database com sucesso'
+        log(village, message)
+
         with open(f'{village.username}.database', 'r') as file:
             fields = file.read()
         fields = ast.literal_eval(fields)
@@ -106,14 +116,39 @@ def get_database(village, name_village):
         create_database(village, name_village)
 
 def create_database(village, name_village):
-    print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Identificado que é o primeiro acesso nessa aldeia')
-    print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Atualizando dados, isso pode levar alguns minutos')
+    message = f'{datetime.datetime.now().strftime("%H:%M:%S")} - Identificado que é o primeiro acesso nessa aldeia'
+    log(village, message)
+    print(message)
+    message = f'{datetime.datetime.now().strftime("%H:%M:%S")} - Atualizando dados, isso pode levar alguns minutos'
+    log(village, message)
+    print(message)
     village.update_all_fields_village(name_village)
     set_database(village)
 
 def set_database(village):
     with open(f'{village.username}.database', 'w') as file:
         file.write(str(village.fields))
+
+def log(village, message):
+    with open(f'{village.username}.logs', 'a') as file:
+        file.write(message + '\n')
+
+def print_log(village):
+    os.system('cls')
+    print('Print of Logs')
+    print("____________________________________________________________")
+    print('Menu -> Logs')
+    print('')
+    with open(f'{village.username}.logs', 'r') as file:
+        lines = file.readlines()
+        lines = lines[-15:]
+
+    for line in lines:
+        print(line, end='')
+
+    print('')
+    input('Precione qualquer tecla para sair')
+
 
 """
 As funções abaixo serão utilizadas para manipulação dos menus do sistema
@@ -152,10 +187,15 @@ def menu():
             list_names.append(x)
             aux = aux + 1
         print('')
-        print(f'{len(village.villages)+1} - Sair')
+        print(f'(P) Print of Logs | (Q) Sair')
+        print(f'')
         idVillage = input('=> ')
 
-        if idVillage == str(len(village.villages) + 1):
+        if idVillage.lower() == 'p':
+            print_log(village)
+
+        # Entra no menu sair
+        if idVillage.lower() == 'q':
             break
 
         try:
@@ -179,12 +219,13 @@ def menu_of_village(village, name_village):
         
         print("1 - Recursos e Edifícios")
         print("2 - Atualizar Aldeia")
-        print("3 - Start lista de farms")
+        print("3 - Auto send farmlist")
         print("4 - Lista de atividades")
-        print("5 - Sair")
+        print('')
+        print("(Q) Sair")
         option = input("=> ")
 
-        match option:
+        match option.lower():
             case "1": 
                 resorurses_and_buildings(village, name_village)
             case "2":
@@ -193,7 +234,7 @@ def menu_of_village(village, name_village):
                 menu_start_farmlist(village, name_village)
             case "4":
                 menu_activities_list()
-            case "5":
+            case "q":
                 break
             case _:
                 print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Por favor escolha umas das opções abaixo')
@@ -210,11 +251,12 @@ def resorurses_and_buildings(village, name_village):
             print('2 - Listar Edifícios')
             print('3 - Update Campos de Recursos')
             print('4 - Update Edifícios')
-            print('5 - Sair')
+            print('')
+            print('(Q) Sair')
 
             option = input('=> ')
 
-            match option:
+            match option.lower():
                 case '1':
                     os.system('cls')
                     print(F'{name_village}')
@@ -267,6 +309,10 @@ def resorurses_and_buildings(village, name_village):
                             thread = threading.Thread(name=f'{name_village} - Update recursos para o Nível {toLevel}', 
                                                     target=update_resources_fields_in_level, 
                                                     args=(village, name_village, toLevel, fields_id))
+                            
+                            print('')
+                            print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Ordem de construção adicionado na fila')
+                            time.sleep(4)
                             thread.start()
                         os.system('cls')
                         break
@@ -289,11 +335,15 @@ def resorurses_and_buildings(village, name_village):
                             thread = threading.Thread(name=f'{name_village} - Construindo {village.fields[name_village]["name"][int(builder_id)-1]} para o Nível {toLevel}', 
                                                     target=upgrade_slot_to_level, 
                                                     args=(village, name_village, builder_id, toLevel))
+                            
+                            print('')
+                            print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Ordem de construção adicionado na fila')
+                            time.sleep(4)
                             thread.start()
                         os.system('cls')
                         break
                         
-                case '5':
+                case 'q':
                     break
                 case _:
                     os.system('cls')
@@ -314,6 +364,10 @@ def menu_start_farmlist(village, name_village):
     thread = threading.Thread(name=f'{name_village} - Ativado auto farmlist', 
                               target=start_farm_list, 
                               args=(village, name_village, minuteStart, minuteEnd))
+    
+    print('')
+    print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Started Automatic farmlist submission')
+    time.sleep(4)
     thread.start()
 
 def menu_activities_list():
@@ -327,11 +381,12 @@ def menu_activities_list():
 
         print("1 - Listar Atividades")
         print("2 - Excluir uma atividade")
-        print("3 - sair")
+        print('')
+        print("(Q) Sair")
 
         option = input('=> ')
 
-        match option:
+        match option.lower():
             case "1":
                 os.system('cls')
                 print(F'{name_village}')
@@ -346,7 +401,7 @@ def menu_activities_list():
                 input('Precione qualquer tecla para sair')
             case "2":
                 pass
-            case "3":
+            case "q":
                 break
 
 def menu_quit_of_system(village):
@@ -360,6 +415,9 @@ if __name__ == "__main__":
     print("____________________________________________________________")
     print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Logando na sua conta, aguarde...')
     village = login_on_server(server, username, password)
+
+    message = f'{datetime.datetime.now().strftime("%H:%M:%S")} - Logado na conta com sucesso'
+    log(village, message)
 
     os.system('cls')
 
