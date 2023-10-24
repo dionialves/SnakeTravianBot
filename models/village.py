@@ -43,7 +43,7 @@ class Village(object):
         options.add_experimental_option('excludeSwitches', ['enable-logging'])
         options.add_argument("--headless=new")
         self.browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-        self.browser.implicitly_wait(1)
+        self.browser.implicitly_wait(3)
 
     def login(self, server, username, password):
         """
@@ -204,10 +204,10 @@ class Village(object):
         crop = self.browser.find_element(By.ID, 'l4').text
 
         self.resources[village] = {
-            "lumber": lumber.replace(',', '').replace('.', ''),
-            "clay": clay.replace(',', '').replace('.', ''),
-            "iron": iron.replace(',', '').replace('.', ''),
-            "crop": crop.replace(',', '').replace('.', '')
+            "lumber": lumber.replace(',', '').replace('.', '').replace(' ', ''),
+            "clay": clay.replace(',', '').replace('.', '').replace(' ', ''),
+            "iron": iron.replace(',', '').replace('.', '').replace(' ', ''),
+            "crop": crop.replace(',', '').replace('.', '').replace(' ', '')
         }
 
     def upgrade_fields_resource(self, village, idField):
@@ -245,10 +245,10 @@ class Village(object):
         iron = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[1]/div[1]/div[3]/span').text
         crop = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[1]/div[1]/div[4]/span').text
 
-        lumber = lumber.replace(',', '').replace('.', '')
-        clay = clay.replace(',', '').replace('.', '')
-        iron = iron.replace(',', '').replace('.', '')
-        crop = crop.replace(',', '').replace('.', '')
+        lumber = lumber.replace(',', '').replace('.', '').replace(' ', '')
+        clay = clay.replace(',', '').replace('.', '').replace(' ', '')
+        iron = iron.replace(',', '').replace('.', '').replace(' ', '')
+        crop = crop.replace(',', '').replace('.', '').replace(' ', '')
 
         return {'lumber': lumber, 'clay': clay, 'iron': iron, 'crop': crop}
 
