@@ -272,6 +272,22 @@ class Village(object):
 
         return list_id_no_crop
 
+    def check_resources_for_update_slot(self, name_village, id_field):
+        # Atualiza os recursos da aldeia
+        self.get_resources(name_village)
+
+        # retorna lista com recursos necessários para fazer a construção
+        resources = self.check_construction_resources(id_field)
+
+        # Verifica se tem os rercursos necessário para fazer a construção
+        if (int(self.resources[name_village]['lumber']) >= int(resources['lumber']) and
+            int(self.resources[name_village]['clay']) >= int(resources['clay'])  and
+            int(self.resources[name_village]['iron']) >= int(resources['iron'])  and
+            int(self.resources[name_village]['crop']) >= int(resources['crop'])):
+            return True
+        else:
+            return False
+    
     def separate_name(self, name):
         """
         Utilitário para limpar a string recebida do site
@@ -293,4 +309,4 @@ class Village(object):
         """
         
         self.browser.get(f'{self.server}/logout')
-        self.browser.close()
+        self.browser.quit()

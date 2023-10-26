@@ -4,8 +4,11 @@ import time
 import datetime
 import threading
 from random import randint
+from watchdog.observers import Observer
 
 from models.village import Village
+from models.construction import Construction
+from models.log import Log
 
 
 """
@@ -20,68 +23,17 @@ Funções usada para esse processo:
 """
 
 def update_resources_fields_in_level(village, name_village, toLevel, list_of_ids):
-    for level in range(1, int(toLevel)+1):
-        for id_field in list_of_ids:
-            if int(village.fields[name_village]["level"][int(id_field)-1]) < int(level):
-                upgrade_slot_to_level(village, name_village, id_field, level)
-    
-    time.sleep(2)   
-    message = f'{datetime.datetime.now().strftime("%H:%M:%S")} - Todos os recursos já foram atualizados para o level {toLevel}'
-    log(village, message)
-    
+    for to_level in range(1, int(toLevel)+1):
+        for slot_id in list_of_ids:
+            if int(village.fields[name_village]["level"][int(slot_id)-1]) < int(to_level):
 
-def check_resources_for_construction(village, name_village, id_field):
-    # Atualiza os recursos da aldeia
-    message = f'{datetime.datetime.now().strftime("%H:%M:%S")} - Atualizando quantidades de recursos na aldeia'
-    log(village, message)
-    village.get_resources(name_village)
-
-    # retorna lista com recursos necessários para fazer a construção
-    resources = village.check_construction_resources(id_field)
-
-    # Verifica se tem os rercursos necessário para fazer a construção
-    if (int(village.resources[name_village]['lumber']) >= int(resources['lumber']) and
-        int(village.resources[name_village]['clay']) >= int(resources['clay'])  and
-        int(village.resources[name_village]['iron']) >= int(resources['iron'])  and
-        int(village.resources[name_village]['crop']) >= int(resources['crop'])):
-        return True
-    else:
-        return False
-    
-"""
-Esta função será utiliza para realizar o upgrade de um determinado edificio até o nível desejado.
-Serão usados para isso os slots que já possuirem uma construção 
-"""
-def upgrade_slot_to_level(village, name_village, id_field, level):
-
-    while True:
-        #atualiza o campo em específico 
-        village.update_fields_village(name_village, [id_field])
-        set_database(village)
-
-        if int(village.fields[name_village]['level'][int(id_field)-1]) >= int(level):
-            # Verifica se ele esta abaixo do nível desejado
-            message = f'{datetime.datetime.now().strftime("%H:%M:%S")} - {village.fields[name_village]["name"][int(id_field)-1]} já atingiu o nível solicitado!'
-            log(village, message)
-            break
-
-        village.update_building_orders(name_village)
-        if village.building_ordens[name_village]:
-            message = f'{datetime.datetime.now().strftime("%H:%M:%S")} - Construção na fila, tempo de espera: {datetime.timedelta(minutes=int(village.building_ordens[name_village][0][2] / 60 + 2))} minutos'
-            log(village, message)
-            time.sleep(int(village.building_ordens[name_village][0][2] + 120))
-        else:
-            # Entra na função para fazer a verificação se tem recursos para update
-            if check_resources_for_construction(village, name_village, id_field):
-                village.upgrade_fields_resource(name_village, id_field)
-
-                message = f'{datetime.datetime.now().strftime("%H:%M:%S")} - Construindo {village.fields[name_village]["name"][int(id_field)-1]} para o level {int(village.fields[name_village]["level"][int(id_field)-1])+1}'
-                log(village, message)
-            else:
-                message = f'{datetime.datetime.now().strftime("%H:%M:%S")} - Sem recursos suficientes para construir, vamos aguardar 10 minutos'
-                log(village, message)
-                time.sleep(600)
-
+                thread_construction[name_village].list_of_construction.append({
+                        'name_village': name_village, 
+                        'slot_id': slot_id,
+                        'to_level': to_level
+                    }
+                )
+     
 """
 Esta função será utilizada para iniciar assaltos e usará como base a lista de farms de cada vila
 """
@@ -134,20 +86,23 @@ def log(village, message):
         file.write(message + '\n')
 
 def print_log(village):
-    os.system('cls')
-    print('Print of Logs')
-    print("____________________________________________________________")
-    print('Menu -> Logs')
-    print('')
-    with open(f'{village.username}.logs', 'r') as file:
-        lines = file.readlines()
-        lines = lines[-15:]
+    log = Log(village)
+    log.print_on_file()
 
-    for line in lines:
-        print(line, end='')
+    observer = Observer()
+    observer.schedule(Log(village), path=".")
+    observer.start()
+    try:
+        while True:
+            time.sleep(1)
 
-    print('')
-    input('Precione qualquer tecla para sair')
+            print('')
+            if input('Precione "q" para sair: ').strip().lower() == "q":
+                observer.stop()
+                observer.join()
+                break
+    except KeyboardInterrupt:
+        observer.stop()
 
 
 """
@@ -298,22 +253,20 @@ def resorurses_and_buildings(village, name_village):
 
                         match option:
                             case "1":
-                                fields_id = village.get_only_crop(name_village)
+                                list_of_ids = village.get_only_crop(name_village)
                             case "2":
-                                fields_id = village.get_no_crop(name_village)
+                                list_of_ids = village.get_no_crop(name_village)
                             case "3":
-                                fields_id = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+                                list_of_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
                             case _:
                                 pass
+                            
                         if option and toLevel:
-                            thread = threading.Thread(name=f'{name_village} - Update recursos para o Nível {toLevel}', 
-                                                    target=update_resources_fields_in_level, 
-                                                    args=(village, name_village, toLevel, fields_id))
+                            update_resources_fields_in_level(village, name_village, toLevel, list_of_ids)
                             
                             print('')
                             print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Ordem de construção adicionado na fila')
                             time.sleep(4)
-                            thread.start()
                         os.system('cls')
                         break
                 case '4':
@@ -328,18 +281,20 @@ def resorurses_and_buildings(village, name_village):
                             if village.fields[name_village]['level'][slot] != "0":
                                 print(f'id: {slot+1} | ({village.fields[name_village]["level"][slot]}) - {village.fields[name_village]["name"][slot]}')
                         
-                        builder_id = input('Id => ')
-                        toLevel = input('Upgrade para qual nível => ')
+                        slot_id = input('Id => ')
+                        to_level = input('Upgrade para qual nível => ')
 
-                        if builder_id and toLevel:
-                            thread = threading.Thread(name=f'{name_village} - Construindo {village.fields[name_village]["name"][int(builder_id)-1]} para o Nível {toLevel}', 
-                                                    target=upgrade_slot_to_level, 
-                                                    args=(village, name_village, builder_id, toLevel))
+                        if slot_id and to_level:
+                            thread_construction[name_village].list_of_construction.append({
+                                    'name_village': name_village, 
+                                    'slot_id': slot_id,
+                                    'to_level': to_level
+                                }
+                            )
                             
                             print('')
                             print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Ordem de construção adicionado na fila')
                             time.sleep(4)
-                            thread.start()
                         os.system('cls')
                         break
                         
@@ -393,10 +348,10 @@ def menu_activities_list():
                 print("____________________________________________________________")
                 print('Menu -> Menu Principal -> Lista de Atividades - Listar')
                 print('')
-                for thread in threading.enumerate():
-                    if thread.name != 'MainThread':
-                        if name_village in thread.name:
-                            print(f'=> {thread.name}')
+
+                for order in thread_construction[name_village].list_of_construction:
+                    print(f' =>{order["name_village"]} construindo {village.fields[name_village]["name"][int(order["slot_id"])-1]} para o level {order["to_level"]} ')
+                            
                 print('')
                 input('Precione qualquer tecla para sair')
             case "2":
@@ -415,6 +370,14 @@ if __name__ == "__main__":
     print("____________________________________________________________")
     print(f'{datetime.datetime.now().strftime("%H:%M:%S")} - Logando na sua conta, aguarde...')
     village = login_on_server(server, username, password)
+
+
+    # Inicia as threads de construção
+    thread_construction = globals()
+    for name_village in village.villages:
+        thread_construction[name_village] = Construction(village)
+        thread_construction[name_village].daemon = True
+        thread_construction[name_village].start()
 
     message = f'{datetime.datetime.now().strftime("%H:%M:%S")} - Logado na conta com sucesso'
     log(village, message)
