@@ -4,7 +4,7 @@ from watchdog.events import FileSystemEventHandler
 class Log(FileSystemEventHandler):
     def __init__(self, village):
         self.village = village
-        self.file = f'{self.village.username}.logs'
+        self.file = f'{self.village.username}.logs'.lower()
 
     def on_modified(self, event):
         if event.src_path == f'.\{self.file}':
@@ -17,7 +17,7 @@ class Log(FileSystemEventHandler):
     def print_on_file(self):
         with open(self.file , 'r') as file:
             lines = file.readlines()
-            lines = lines[-15:]
+            lines = lines[-25:]
 
         os.system('cls')
         print("____________________________________________________________")

@@ -1,8 +1,8 @@
+eternium.logs
+eternium.database
 .tool-versions
 __pycache__
 diviks.database
-Eternium.database
-Eternium.logs
 diviks.logs
 venv
 dist

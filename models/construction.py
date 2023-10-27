@@ -6,28 +6,41 @@ from models.log import Log
 
 
 class Construction(Thread):
+    """
+    Esta variavel precisa ser preenchida com a seguinte ordem:
+    [
+        {
+            'name_village': 'name_village', 
+            'slot_id': 'slot_id',
+            'to_level': 'to_level'
+        }
+    ]
+    name_village = Nome da aldeia
+    slot_id = Slot a ser construido
+    to_level = level a ser atualizado
+
+    """
     def __init__(self, village):
         super().__init__()
-        """
-        Esta variavel precisa ser preenchida com a seguinte ordem:
-        [
-            
-            {
-                'name_village': 'name_village', 
-                'slot_id': 'slot_id',
-                'to_level': 'to_level'
-            }
-            
-        ]
-        name_village = Nome da aldeia
-        slot_id = Slot a ser construido
-        to_level = level a ser atualizado
 
-        """
         self.list_of_construction = []
         self.event = Event()
         self.village = village
         self.log = Log(village)
+
+    def add(self, name_village, slot_id, to_level):
+        self.list_of_construction.append({
+            'name_village': name_village, 
+            'slot_id': slot_id,
+            'to_level': to_level
+            }
+        )
+
+    def construction_for_resourses(self, name_village, toLevel, list_of_ids):
+        for to_level in range(1, int(toLevel)+1):
+            for slot_id in list_of_ids:
+                if int(self.village.fields[name_village]["level"][int(slot_id)-1]) < int(to_level):
+                    self.add(name_village, slot_id, to_level)
 
     def run(self):
         while not self.event.is_set():
