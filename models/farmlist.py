@@ -5,7 +5,7 @@ from threading import Thread, Event
 from models.log import Log
 
 
-class AutoSendFarmlist(Thread):
+class Farmlist(Thread):
     """
     Esta variavel precisa ser preenchida com a seguinte ordem:
     [
@@ -18,13 +18,13 @@ class AutoSendFarmlist(Thread):
     to_level = level a ser atualizado
 
     """
-    def __init__(self, village):
+    def __init__(self, travian):
         super().__init__()
 
         self.order_auto_send_farmlist = {}
         self.event = Event()
-        self.village = village
-        self.log = Log(village)
+        self.travian = travian
+        self.log = Log(travian)
 
     def add(self, start_of_interval, end_of_interval):
         self.order_auto_send_farmlist = {
@@ -34,18 +34,19 @@ class AutoSendFarmlist(Thread):
 
     def run(self):
         while not self.event.is_set():
+            self.event.wait(1)
+
             if self.order_auto_send_farmlist:
 
-                self.village.start_all_farm_list()
+                self.travian.start_all_farm_list()
 
                 interval_in_minutes = randint(
                     int(self.order_auto_send_farmlist['start_of_interval']), 
                     int(self.order_auto_send_farmlist['end_of_interval'])
                 )
                 
-                hours = datetime.datetime.now().strftime("%H:%M:%S")
                 nextStart = datetime.datetime.now() + datetime.timedelta(minutes=interval_in_minutes)
                 nextStart = nextStart.strftime("%H:%M:%S")
 
-                self.log.write(f'{hours} - Realizado o assalto, o proximo esta programado para as {nextStart}')
+                self.log.write(f'{datetime.datetime.now().strftime("%H:%M:%S")} | Iniciando FarmList, o proximo esta programado para as {nextStart}')
                 self.event.wait(interval_in_minutes*60)

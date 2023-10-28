@@ -23,6 +23,70 @@ BUILDING = {
     '34': "Stonemason's Lodge"
 }
 
+TROOPS = {
+    'Roman': {
+        'Legionnaire': 't1',
+        'Praetorian': 't2',
+        'Imperian': 't3',
+        'Equites Legati': '',
+        'Equites Imperatoris': '',
+        'Equites Caesaris': '',
+        'Battering ram': '',
+        'Fire Catapult': '',
+        'Senator': '',
+        'Settler': ''
+    },
+    'Teuton': {
+        'Clubswinger': 't1',
+        'Spearman': 't2',
+        'Axeman': 't3',
+        'Scout': 't4',
+        'Paladin': '',
+        'Teutonic Knight': '',
+        'Ram': '',
+        'Catapult': '',
+        'Chief': '',
+        'Settler': ''
+    },
+    'Gaul': {
+        'Phalanx': 't1',
+        'Swordsman': 't2',
+        'Pathfinder': 't3',
+        'Theutates Thunder': 't4',
+        'Druidrider': '',
+        'Haeduan': '',
+        'Ram': '',
+        'Trebuchet': '',
+        'Chieftain': '',
+        'Settler': ''
+    },
+    'Egyptian': {
+        'Slave Militia': '',
+        'Ash Warden': '',
+        'Khopesh Warrior': '',
+        'Sopdu Explorer': '',
+        'Anhur Guard': '',
+        'Resheph Chariot': '',
+        'Ram': '',
+        'Stone Catapult': '',
+        'Nomarch': '',
+        'Settler': ''
+    },
+    'Hun': {
+        'Mercenary': '',
+        'Bowman': '',
+        'Spotter': '',
+        'Steppe Rider': '',
+        'Marksman': '',
+        'Marauder': '',
+        'Ram': '',
+        'Catapult': '',
+        'Logades': '',
+        'Settler': ''
+    }
+
+}
+
 class Village(object):
     def __init__(self):
         self.server = str()
@@ -34,6 +98,7 @@ class Village(object):
         self.building_ordens = {}
         self.resources = {}
         self.order_queue = None
+        self.troops = {}
 
     def instance_browser(self):
         """
@@ -65,6 +130,17 @@ class Village(object):
         password.send_keys(self.password)
 
         self.browser.find_element(By.XPATH, "/html/body/div[3]/div[2]/div[2]/div[2]/div/div/div[1]/form/table/tbody/tr[5]/td[2]/button").click()
+
+    def get_tribe(self):
+        self.browser.get(f'{self.server}/profile')
+
+        if self.browser.find_elements(By.CLASS_NAME, "gaul"):
+            self.tribe = 'Gaul'
+        elif self.browser.find_elements(By.CLASS_NAME, "teuton"):
+            self.tribe = 'Teuton'
+        else:
+            self.tribe = 'Roman'
+
 
     def update_all_fields_village(self, village):
         """
@@ -286,7 +362,113 @@ class Village(object):
             return True
         else:
             return False
-    
+
+    def get_troops_infantary(self, village):
+        if '19' in self.fields[village]['id']:
+            slot_build = self.fields[village]['slot'][self.fields[village]['id'].index('19')]
+
+            self.browser.get(f'{self.server}/build.php?id={slot_build}')
+
+            infantry = []
+
+            if self.tribe == 'Gaul':
+                if self.browser.find_elements(By.NAME, "t1"):
+                    infantry.append('Phalanx')
+
+                if self.browser.find_elements(By.NAME, "t2"):
+                    infantry.append('Swordsman')
+
+            elif self.tribe == 'Teuton':
+                if self.browser.find_elements(By.NAME, "t1"):
+                    infantry.append('Clubswinger')
+
+                if self.browser.find_elements(By.NAME, "t2"):
+                    infantry.append('Spearman')
+
+                if self.browser.find_elements(By.NAME, "t3"):
+                    infantry.append('Axeman')
+
+                if self.browser.find_elements(By.NAME, "t4"):
+                    infantry.append('Scout')
+
+            if self.tribe == 'Roman':
+                if self.browser.find_elements(By.NAME, "t1"):
+                    infantry.append('Legionnaire')
+
+                if self.browser.find_elements(By.NAME, "t2"):
+                    infantry.append('Praetorian')
+
+                if self.browser.find_elements(By.NAME, "t3"):
+                    infantry.append('Imperian')
+
+            self.troops['infantry'] = infantry
+
+    def get_troops_cavalry(self, village):
+        if '20' in self.fields[village]['id']:
+            slot_build = self.fields[village]['slot'][self.fields[village]['id'].index('20')]
+
+            self.browser.get(f'{self.server}/build.php?id={slot_build}')
+
+            cavalry = []
+            if self.tribe == 'Gaul':
+                if self.browser.find_elements(By.NAME, "t3"):
+                    cavalry.append('Pathfinder')
+
+                if self.browser.find_elements(By.NAME, "t4"):
+                    cavalry.append('Theutates Thunder')
+
+                if self.browser.find_elements(By.NAME, "t1"):
+                    cavalry.append('')
+
+                if self.browser.find_elements(By.NAME, "t2"):
+                    cavalry.append('')
+
+
+            elif self.tribe == 'Teuton':
+                if self.browser.find_elements(By.NAME, "t1"):
+                    cavalry.append('')
+
+                if self.browser.find_elements(By.NAME, "t2"):
+                    cavalry.append('')
+
+            if self.tribe == 'Roman':
+                if self.browser.find_elements(By.NAME, "t1"):
+                    cavalry.append('')
+
+                if self.browser.find_elements(By.NAME, "t2"):
+                    cavalry.append('')
+
+                if self.browser.find_elements(By.NAME, "t3"):
+                    cavalry.append('')
+
+            self.troops['cavalry'] = cavalry
+
+    def train_infantry(self, village, infantry, train_number):
+        if '19' in self.fields[village]['id']:
+            slot_build = self.fields[village]['slot'][self.fields[village]['id'].index('19')]
+            self.browser.get(f'{self.server}/build.php?id={slot_build}')
+
+            code = TROOPS[self.tribe][infantry]
+
+            input_number_of_troops = self.browser.find_element(By.NAME, code)
+            input_number_of_troops.send_keys(train_number)
+
+            button = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/form/button')
+            button.click()
+
+    def train_cavalry(self, village, cavalry, train_number):
+        if '20' in self.fields[village]['id']:
+            slot_build = self.fields[village]['slot'][self.fields[village]['id'].index('20')]
+            self.browser.get(f'{self.server}/build.php?id={slot_build}')
+
+            code = TROOPS[self.tribe][cavalry]
+
+            input_number_of_troops = self.browser.find_element(By.NAME, code)
+            input_number_of_troops.send_keys(train_number)
+
+            button = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/form/button')
+            button.click()
+
     def separate_name(self, name):
         """
         Utilitário para limpar a string recebida do site
@@ -309,3 +491,25 @@ class Village(object):
         
         self.browser.get(f'{self.server}/logout')
         self.browser.quit()
+
+
+if __name__ == '__main__':
+
+    travian = Village()
+
+    travian.server = 'ts3.x1.america.travian.com'
+    travian.username = 'diviks'
+    travian.password = 'alves625'
+
+    village = 'Debian'
+
+    travian.login(travian.server, travian.username, travian.password)
+    travian.update_name_villages()
+    travian.update_all_fields_village(village)
+    travian.get_tribe()
+
+    travian.get_troops_infantary(village)
+    travian.get_troops_cavalry(village)
+
+
+
