@@ -165,6 +165,7 @@ class Village(object):
 
             if self.browser.find_elements(By.CLASS_NAME, 'buildingWrapper'):
                 name_and_level = ['Zona Livre', '0']
+                building_id = '0'
             else:
                 name_and_level = self.separate_name(name)
                 building_id = url.split('&')[1].split('=')[1]
@@ -201,6 +202,7 @@ class Village(object):
 
             if self.browser.find_elements(By.CLASS_NAME, 'buildingWrapper'):
                 name_and_level = ['Zona Livre', '0']
+                building_id = '0'
             else:
                 name_and_level = self.separate_name(name)
 
