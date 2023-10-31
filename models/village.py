@@ -100,6 +100,7 @@ class Village(object):
         self.order_queue = None
         self.troops = {}
 
+
     def instance_browser(self):
         """
         Essa função é responsável por inicializar a instancia do navegador
@@ -367,6 +368,8 @@ class Village(object):
 
     def get_troops_infantary(self, village):
         if '19' in self.fields[village]['id']:
+            self.browser.get(self.villages[village]['url'])
+
             slot_build = self.fields[village]['slot'][self.fields[village]['id'].index('19')]
 
             self.browser.get(f'{self.server}/build.php?id={slot_build}')
@@ -407,6 +410,8 @@ class Village(object):
 
     def get_troops_cavalry(self, village):
         if '20' in self.fields[village]['id']:
+            self.browser.get(self.villages[village]['url'])
+
             slot_build = self.fields[village]['slot'][self.fields[village]['id'].index('20')]
 
             self.browser.get(f'{self.server}/build.php?id={slot_build}')
@@ -447,6 +452,8 @@ class Village(object):
 
     def train_infantry(self, village, infantry, train_number):
         if '19' in self.fields[village]['id']:
+            self.browser.get(self.villages[village]['url'])
+
             slot_build = self.fields[village]['slot'][self.fields[village]['id'].index('19')]
             self.browser.get(f'{self.server}/build.php?id={slot_build}')
 
@@ -460,6 +467,8 @@ class Village(object):
 
     def train_cavalry(self, village, cavalry, train_number):
         if '20' in self.fields[village]['id']:
+            self.browser.get(self.villages[village]['url'])
+            
             slot_build = self.fields[village]['slot'][self.fields[village]['id'].index('20')]
             self.browser.get(f'{self.server}/build.php?id={slot_build}')
 
