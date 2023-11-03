@@ -8,12 +8,12 @@ class Database:
     def __init__(self, travian):
         self.travian = travian
         self.log = Log(travian)
-        self.file = f'{self.travian.username}.db'.lower()
+        self.file = f'data/{self.travian.username}-{self.travian.server[8:]}.db'.lower()
 
     def is_created(self):
-         if not os.path.isfile(self.file):
+        if not os.path.isfile(self.file):
             return False
-         return True
+        return True
     
     def check_data_of_village(self, village):
         if self.is_created():
@@ -25,6 +25,9 @@ class Database:
         return False
 
     def write(self, data):
+        if not os.path.exists('data'):
+            os.makedirs('data')
+
         with open(self.file, 'w') as file:
             file.write(str(data))
         file.close()

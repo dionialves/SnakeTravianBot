@@ -28,61 +28,61 @@ TROOPS = {
         'Legionnaire': 't1',
         'Praetorian': 't2',
         'Imperian': 't3',
-        'Equites Legati': '',
-        'Equites Imperatoris': '',
-        'Equites Caesaris': '',
-        'Battering ram': '',
-        'Fire Catapult': '',
-        'Senator': '',
-        'Settler': ''
+        'Equites Legati': 't4',
+        'Equites Imperatoris': 't5',
+        'Equites Caesaris': 't6',
+        'Battering ram': 't7',
+        'Fire Catapult': 't8',
+        'Senator': 't9',
+        'Settler': 't10'
     },
     'Teuton': {
         'Clubswinger': 't1',
         'Spearman': 't2',
         'Axeman': 't3',
         'Scout': 't4',
-        'Paladin': '',
-        'Teutonic Knight': '',
-        'Ram': '',
-        'Catapult': '',
-        'Chief': '',
-        'Settler': ''
+        'Paladin': 't5',
+        'Teutonic Knight': 't6',
+        'Ram': 't7',
+        'Catapult': 't8',
+        'Chief': 't9',
+        'Settler': 't10'
     },
     'Gaul': {
         'Phalanx': 't1',
         'Swordsman': 't2',
         'Pathfinder': 't3',
         'Theutates Thunder': 't4',
-        'Druidrider': '',
-        'Haeduan': '',
-        'Ram': '',
-        'Trebuchet': '',
-        'Chieftain': '',
-        'Settler': ''
+        'Druidrider': 't5',
+        'Haeduan': 't6',
+        'Ram': 't7',
+        'Trebuchet': 't8',
+        'Chieftain': 't9',
+        'Settler': 't10'
     },
     'Egyptian': {
-        'Slave Militia': '',
-        'Ash Warden': '',
-        'Khopesh Warrior': '',
-        'Sopdu Explorer': '',
-        'Anhur Guard': '',
-        'Resheph Chariot': '',
-        'Ram': '',
-        'Stone Catapult': '',
-        'Nomarch': '',
-        'Settler': ''
+        'Slave Militia': 't1',
+        'Ash Warden': 't2',
+        'Khopesh Warrior': 't3',
+        'Sopdu Explorer': 't4',
+        'Anhur Guard': 't5',
+        'Resheph Chariot': 't6',
+        'Ram': 't7',
+        'Stone Catapult': 't8',
+        'Nomarch': 't9',
+        'Settler': 't10'
     },
     'Hun': {
-        'Mercenary': '',
-        'Bowman': '',
-        'Spotter': '',
-        'Steppe Rider': '',
-        'Marksman': '',
-        'Marauder': '',
-        'Ram': '',
-        'Catapult': '',
-        'Logades': '',
-        'Settler': ''
+        'Mercenary': 't1',
+        'Bowman': 't2',
+        'Spotter': 't3',
+        'Steppe Rider': 't4',
+        'Marksman': 't5',
+        'Marauder': 't6',
+        'Ram': 't7',
+        'Catapult': 't8',
+        'Logades': 't9',
+        'Settler': 't10'
     }
 
 }
@@ -99,7 +99,21 @@ class Village(object):
         self.resources = {}
         self.order_queue = None
         self.troops = {}
+        self.list_farms = False
 
+    def get_information(self):
+        # Pega o nome da tribo
+        self.get_tribe()
+        # Obtem o nome das aldeias
+        self.update_name_villages()
+        # Verifica se tem ordens de contrução
+        for village in self.villages:
+            self.get_building_orders(village)
+
+        # Verifica se existe 
+        self.browser.get(self.server + '/build.php?id=39&gid=16&tt=99')
+        if self.browser.find_elements(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div[3]/div/div[1]/div[2]/button[1]'):
+            self.list_farms = True
 
     def instance_browser(self):
         """
@@ -120,7 +134,8 @@ class Village(object):
         self.server = server
         self.username = username
         self.password = password
-        self.server = 'https://' + self.server
+        if not 'https://' in self.server:
+            self.server = 'https://' + self.server
 
         self.browser.get(self.server)
 
@@ -139,6 +154,8 @@ class Village(object):
             self.tribe = 'Gaul'
         elif self.browser.find_elements(By.CLASS_NAME, "teuton"):
             self.tribe = 'Teuton'
+        elif self.browser.find_elements(By.CLASS_NAME, "egyptian"):
+            self.tribe = 'Egyptian'
         else:
             self.tribe = 'Roman'
 
@@ -233,14 +250,15 @@ class Village(object):
 
         for x in range(0, len(list_village)):
 
-            xpathUrl = self.browser.find_element(By.XPATH, f'//*[@id="overview"]/tbody/tr[{x+1}]/td[1]/a')
+            if self.browser.find_elements(By.XPATH, f'//*[@id="overview"]/tbody/tr[{x+1}]/td[1]/a'):
+                xpathUrl = self.browser.find_element(By.XPATH, f'//*[@id="overview"]/tbody/tr[{x+1}]/td[1]/a')
 
-            url = xpathUrl.get_attribute("href")
-            id_village = url.split('=')[1]
+                url = xpathUrl.get_attribute("href")
+                id_village = url.split('=')[1]
 
-            self.villages[list_village[x]] = {'url': url, 'id': id_village}
+                self.villages[list_village[x]] = {'url': url, 'id': id_village}
 
-    def update_building_orders(self, village):
+    def get_building_orders(self, village):
         """
         Escaneia de todas de uma ldeia específica as ordens de construção.
         """
@@ -307,8 +325,12 @@ class Village(object):
 
         self.browser.get(self.server + '/build.php?id=39&gid=16&tt=99')
 
-        buttonStartAllList = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div[3]/div/div[1]/div[2]/button[1]')
-        buttonStartAllList.click()
+        if self.browser.find_elements(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div[3]/div/div[1]/div[2]/button[1]'):
+            buttonStartAllList = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div[3]/div/div[1]/div[2]/button[1]')
+            buttonStartAllList.click()
+            self.list_farms = True
+        else:
+            self.list_farms = False
 
 
     def check_construction_resources(self, idField):
@@ -396,7 +418,7 @@ class Village(object):
                 if self.browser.find_elements(By.NAME, "t4"):
                     infantry.append('Scout')
 
-            if self.tribe == 'Roman':
+            elif self.tribe == 'Roman':
                 if self.browser.find_elements(By.NAME, "t1"):
                     infantry.append('Legionnaire')
 
@@ -405,6 +427,23 @@ class Village(object):
 
                 if self.browser.find_elements(By.NAME, "t3"):
                     infantry.append('Imperian')
+
+            elif self.tribe == 'Egyptian':
+                if self.browser.find_elements(By.NAME, "t1"):
+                    infantry.append('Slave Militia')
+
+                if self.browser.find_elements(By.NAME, "t2"):
+                    infantry.append('Ash Warden')
+
+                if self.browser.find_elements(By.NAME, "t3"):
+                    infantry.append('Khopesh Warrior')
+
+            elif self.tribe == 'Hun':
+                if self.browser.find_elements(By.NAME, "t1"):
+                    infantry.append('Mercenary')
+
+                if self.browser.find_elements(By.NAME, "t2"):
+                    infantry.append('Bowman')
 
             self.troops['infantry'] = infantry
 
@@ -424,29 +463,51 @@ class Village(object):
                 if self.browser.find_elements(By.NAME, "t4"):
                     cavalry.append('Theutates Thunder')
 
-                if self.browser.find_elements(By.NAME, "t1"):
-                    cavalry.append('')
+                if self.browser.find_elements(By.NAME, "t5"):
+                    cavalry.append('Druidrider')
 
-                if self.browser.find_elements(By.NAME, "t2"):
-                    cavalry.append('')
-
+                if self.browser.find_elements(By.NAME, "t6"):
+                    cavalry.append('Haeduan')
 
             elif self.tribe == 'Teuton':
-                if self.browser.find_elements(By.NAME, "t1"):
+                if self.browser.find_elements(By.NAME, "t5"):
+                    cavalry.append('Paladin')
+
+                if self.browser.find_elements(By.NAME, "t6"):
+                    cavalry.append('Teutonic Knight')
+
+            elif self.tribe == 'Roman':
+                if self.browser.find_elements(By.NAME, "t4"):
+                    cavalry.append('Equites Legati')
+
+                if self.browser.find_elements(By.NAME, "t5"):
+                    cavalry.append('Equites Imperatoris')
+
+                if self.browser.find_elements(By.NAME, "t6"):
+                    cavalry.append('Equites Caesaris')
+            
+            elif self.tribe == 'Egyptian':
+                if self.browser.find_elements(By.NAME, "t4"):
+                    cavalry.append('Sopdu Explorer')
+
+                if self.browser.find_elements(By.NAME, "t5"):
                     cavalry.append('')
 
-                if self.browser.find_elements(By.NAME, "t2"):
+                if self.browser.find_elements(By.NAME, "t6"):
                     cavalry.append('')
-
-            if self.tribe == 'Roman':
-                if self.browser.find_elements(By.NAME, "t1"):
-                    cavalry.append('')
-
-                if self.browser.find_elements(By.NAME, "t2"):
-                    cavalry.append('')
-
+            
+            elif self.tribe == 'Hun':
                 if self.browser.find_elements(By.NAME, "t3"):
-                    cavalry.append('')
+                    cavalry.append('Spotter')
+
+                if self.browser.find_elements(By.NAME, "t4"):
+                    cavalry.append('Steppe Rider')
+
+                if self.browser.find_elements(By.NAME, "t5"):
+                    cavalry.append('Marksman')
+
+                if self.browser.find_elements(By.NAME, "t6"):
+                    cavalry.append('Marauder')
 
             self.troops['cavalry'] = cavalry
 

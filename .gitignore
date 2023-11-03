@@ -1,9 +1,7 @@
-eternium.logs
-eternium.db
+
 .tool-versions
 __pycache__
-diviks.db
-diviks.logs
+data/
 .venv
 dist
 .vscode

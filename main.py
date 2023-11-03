@@ -12,6 +12,7 @@ from models.database import Database
 from models.infantrytraining import InfatryTraining
 from models.cavalrytraining import CavalryTraining
 
+
 def print_log(travian):
     log = Log(travian)
     log.print_on_file()
@@ -61,13 +62,12 @@ def menu():
     while True:
         os.system('cls')
         print("____________________________________________________________________________________________")
-        print(f'| Account: {travian.username}')
+        print(f'| Account: {travian.username} ({travian.tribe})')
         print(f'| Server: {travian.server}')
         print("|___________________________________________________________________________________________")
         print('|')
         print('| 1 - Aldeias')
-        print('| 2 - Farmlist')
-        print('|')
+        print('| 2 - Auto Send Farmlist')
         print('|')
         print("|___________________________________________________________________________________________")
         print(f'| (P) Print of Logs | (Q) Sair')
@@ -88,7 +88,7 @@ def menu_set_village():
     while True:
         os.system('cls')
         print("____________________________________________________________________________________________")
-        print(f'| Account: {travian.username}')
+        print(f'| Account: {travian.username} ({travian.tribe})')
         print(f'| Server: {travian.server}')
         print("|___________________________________________________________________________________________")
         print('|')
@@ -149,7 +149,7 @@ def menu_of_village(name_village):
     while True:
         os.system('cls')
         print("____________________________________________________________________________________________")
-        print(f'| Account: {travian.username}')
+        print(f'| Account: {travian.username} ({travian.tribe})')
         print(f'| Server: {travian.server}')
         print("|")
         print(F'| Aldeia: {name_village}')
@@ -160,7 +160,7 @@ def menu_of_village(name_village):
         print("| 2 - Atualizar Aldeia")
         print("| 3 - Treino de Infantaria")
         print('| 4 - Treino de Cavalaria')
-        print('|')
+        print('| 5 - Monitor')
         print("|___________________________________________________________________________________________")
         print("| (Q) Sair")
         option = input("| => ")
@@ -174,6 +174,8 @@ def menu_of_village(name_village):
                 menu_training_infantry(travian, name_village)
             case "4":
                 menu_training_cavalry(travian, name_village)
+            case "5":
+                monitor(name_village)
             case "q":
                 break
 
@@ -183,7 +185,7 @@ def menu_training_infantry(travian, name_village):
     while True:
         os.system('cls')
         print("____________________________________________________________________________________________")
-        print(f'| Account: {travian.username}')
+        print(f'| Account: {travian.username} ({travian.tribe})')
         print(f'| Server: {travian.server}')
         print("|")
         print(F'| Aldeia: {name_village}')
@@ -201,8 +203,9 @@ def menu_training_infantry(travian, name_village):
             for infantry in thread_training_infantry[name_village].training['infantry']:
                 print(f'| -> {infantry}: {thread_training_infantry[name_village].training["train_number"][aux-1]}')
                 aux += 1
-
-            print(f'| O proximo treino será realizado as {thread_training_infantry[name_village].next_training}')
+            
+            if thread_training_infantry[name_village].next_training:
+                print(f'| O proximo treino será realizado as {thread_training_infantry[name_village].next_training}')
             print('| ')
             print('| ')
             print("|___________________________________________________________________________________________")
@@ -237,7 +240,7 @@ def menu_training_infantry(travian, name_village):
                         while True:
                             os.system('cls')
                             print("____________________________________________________________________________________________")
-                            print(f'| Account: {travian.username}')
+                            print(f'| Account: {travian.username} ({travian.tribe})')
                             print(f'| Server: {travian.server}')
                             print("|")
                             print(F'| Aldeia: {name_village}')
@@ -306,7 +309,7 @@ def menu_training_cavalry(travian, name_village):
     while True:
         os.system('cls')
         print("____________________________________________________________________________________________")
-        print(f'| Account: {travian.username}')
+        print(f'| Account: {travian.username} ({travian.tribe})')
         print(f'| Server: {travian.server}')
         print("|")
         print(F'| Aldeia: {name_village}')
@@ -362,7 +365,7 @@ def menu_training_cavalry(travian, name_village):
                         while True:
                             os.system('cls')
                             print("____________________________________________________________________________________________")
-                            print(f'| Account: {travian.username}')
+                            print(f'| Account: {travian.username} ({travian.tribe})')
                             print(f'| Server: {travian.server}')
                             print("|")
                             print(F'| Aldeia: {name_village}')
@@ -429,7 +432,7 @@ def resorurses_and_buildings(travian, name_village):
     while True:
         os.system('cls')
         print("____________________________________________________________________________________________")
-        print(f'| Account: {travian.username}')
+        print(f'| Account: {travian.username} ({travian.tribe})')
         print(f'| Server: {travian.server}')
         print("|")
         print(F'| Aldeia: {name_village}')
@@ -440,7 +443,7 @@ def resorurses_and_buildings(travian, name_village):
 
         list = []
         for slot in range(0, 40):
-            if travian.fields[name_village]["level"][int(slot)] != '0':
+            if travian.fields[name_village]["level"][int(slot)] != '0' or slot < 18:
                 print(f'| Id:{slot+1} - ({travian.fields[name_village]["level"][int(slot)]}) {travian.fields[name_village]["name"][int(slot)]}')
                 
                 # Essa lista será usada para verificar se o usuário selecionou um item da lista
@@ -449,7 +452,7 @@ def resorurses_and_buildings(travian, name_village):
         print('|')
         print('|')
         print("|___________________________________________________________________________________________")
-        print('| (U) Upgrade | (A) Em Andamento (Q) Sair')
+        print('| (U) Upgrade | (A) Em Andamento (R) Todos os Recursos (Q) Sair')
         option = input('| => ')
 
         match option.lower():
@@ -475,7 +478,7 @@ def resorurses_and_buildings(travian, name_village):
             case 'a':
                 os.system('cls')
                 print("|__________________________________________________________________________________________")
-                print(f'| Account: {travian.username}')
+                print(f'| Account: {travian.username} ({travian.tribe})')
                 print(f'| Server: {travian.server}')
                 print("|")
                 print(F'| Aldeia: {name_village}')
@@ -510,14 +513,33 @@ def resorurses_and_buildings(travian, name_village):
                 else:
                     print('| Nenhuma construção na fila')
                     time.sleep(4)
-                            
+            case 'r':
+                to_level = input('| Para qual level: ')
+
+                if to_level.isdigit():
+                    for level in range(1, int(to_level)+1):
+                        for slot_id in range(1,19):
+                            current_level = travian.fields[name_village]['level'][int(slot_id)-1]
+
+                            if int(current_level) < int(level):
+                                thread_construction[name_village].add(name_village, slot_id, level)
+
+                    print('|')
+                    print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} - Ordem de construção adicionado na fila')
+                    time.sleep(4)
+                    os.system('cls')
+        
+                else:
+                    print('|')
+                    print('| Id incorreto, selecione um Id da lista!')
+                    time.sleep(4) 
             case 'q':
                 break
 
 def menu_update_village(travian, name_village):
     os.system('cls')
     print("____________________________________________________________________________________________")
-    print(f'| Account: {travian.username}')
+    print(f'| Account: {travian.username} ({travian.tribe})')
     print(f'| Server: {travian.server}')
     print("|")
     print(F'| Aldeia: {name_village}')
@@ -530,11 +552,11 @@ def menu_update_village(travian, name_village):
     travian.update_all_fields_village(name_village)
     database.write(travian.fields)
 
-def menu_start_farmlist():
+def menu_start_farmlist(start_farmlist):
     while True:
         os.system('cls')
         print("____________________________________________________________________________________________")
-        print(f'| Account: {travian.username}')
+        print(f'| Account: {travian.username} ({travian.tribe})')
         print(f'| Server: {travian.server}')
         print("|")
         print("|___________________________________________________________________________________________")
@@ -544,69 +566,144 @@ def menu_start_farmlist():
         start_of_interval = 20
         end_of_interval = 40
 
-        if thread_farmlist.order_auto_send_farmlist:
-            print(f'| --> Farmlist esta ativado com intervalo automatico entre {start_of_interval} e {end_of_interval} minutos')
-            print('|')
-            print('|')
-            print("|___________________________________________________________________________________________")
-            print('| (D) Desativar Farmlist | (Q) Sair')
-            option = input('| => ')
+        if travian.list_farms:
+            if start_farmlist:
+                print(f'| --> Farmlist esta ativado com intervalo automatico entre {start_of_interval} e {end_of_interval} minutos')
+                print('|')
+                print('|')
+                print("|___________________________________________________________________________________________")
+                print('| (D) Desativar Farmlist | (Q) Sair')
+                option = input('| => ')
+
+            else:
+                print('| --> Farmlist não esta ativado')
+                print('|')
+                print('|')
+                print("|___________________________________________________________________________________________")
+                print('| (A) Ativar Farmlist | (Q) Sair')
+                option = input('| => ')
+
+            match option.lower():
+                case 'd':
+                    if start_farmlist:
+                        thread_farmlist.event.set()
+                        thread_farmlist.join()
+                        thread_farmlist = None
+
+                        start_farmlist = False
+
+                        log.write(f'{datetime.datetime.now().strftime("%H:%M:%S")} | Farmlist desativado')
+                        print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} | Farmlist desativado')
+                        time.sleep(4)
+
+                case 'a':
+                    if not start_farmlist:
+                        thread_farmlist = Farmlist(travian)
+                        thread_farmlist.daemon = True
+                        thread_farmlist.start()
+                    
+                        thread_farmlist.add(start_of_interval, end_of_interval)
+
+                        start_farmlist = True
+
+                        print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} | Farmlist Ativado')
+                        time.sleep(4)
+                case 'q':
+                    break
 
         else:
-            print('| --> Farmlist não esta ativado')
+            print('| --> Aldeia não tem lista de famrs criafa')
             print('|')
             print('|')
             print("|___________________________________________________________________________________________")
-            print('| (A) Ativar Farmlist | (Q) Sair')
+            print('| (Q) Sair')
             option = input('| => ')
 
-        match option.lower():
-            case 'd':
-                    thread_farmlist.order_auto_send_farmlist = {}
+            match option.lower():
+                case 'q':
+                    break
+    # PRECISA SER AJUSTDO CRIANDO UMA CLASS APP E CRIANDO UMA VARIAVEL PARA GUARDAR ESSA INFORMAÇÃO
+    return start_farmlist
 
-                    print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} | Farmlist desativado')
-                    time.sleep(4)
+def monitor(village):
+        while True:
+            os.system('cls')
+            print("____________________________________________________________________________________________")
+            print(f'| Account: {travian.username} ({travian.tribe})')
+            print(f'| Server: {travian.server}')
+            print("|")
+            print(F'| Aldeia: {name_village}')
+            print("|___________________________________________________________________________________________")
+            print('| Menu -> Menu Principal -> Monitor')
+            print('|')
+            print('|')
 
-            case 'a':
-                if not thread_farmlist.order_auto_send_farmlist:
-                    thread_farmlist.add(start_of_interval, end_of_interval)
+            if start_farmlist:
+                print('| Informações Gerais')
+                print('|')
+                print(f'| --> Farmlist esta ativado!')
+                print('|')
+            
+            if thread_construction[village].list_of_construction or (village in thread_training_infantry) or village in thread_training_cavalry or travian.building_ordens[village]:
+                aux = 1
+                if thread_construction[village].list_of_construction or travian.building_ordens[village]:
+                    print('|')
+                    print('| Construções:')
+                    if travian.building_ordens[village]:
+                        print(f'| -> {aux} - {village} construindo {travian.building_ordens[village][0][0]} para o level {travian.building_ordens[village][0][1]} ')
+                    
+                    if len(travian.building_ordens[village]) == 2:
+                        print(f'|    {aux} - {village} construindo {travian.building_ordens[village][1][0]} para o level {travian.building_ordens[village][1][1]} ')
 
-                    print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} | Farmlist Ativado')
-                    time.sleep(4)
-            case 'q':
-                break
+                    for order in thread_construction[village].list_of_construction[:2]:
+                        aux += 1
+                        print(f'|    {aux} - {order["village"]} construindo {travian.fields[village]["name"][int(order["slot_id"])-1]} para o level {order["to_level"]} ')
+                        
 
-def menu_activities_list(name_village):
-    
-    while True:
-        os.system('cls')
-        print("____________________________________________________________________________________________")
-        print(f'| Account: {travian.username}')
-        print(f'| Server: {travian.server}')
-        print("|")
-        print(F'| Aldeia: {name_village}')
-        print("|___________________________________________________________________________________________")
-        print('| Menu -> Menu Principal -> Lista de Atividades')
-        print('|')
-
-        for order in thread_construction[name_village].list_of_construction:
-            print(f'| => {order["village"]} construindo {travian.fields[name_village]["name"][int(order["slot_id"])-1]} para o level {order["to_level"]} ')
-
-        print('|')
-        print('|')
-        print("|___________________________________________________________________________________________")
-        print("| (E) Excluir todos | (Q) Sair")
-        option = input('| => ')
-
-        match option.lower():
-            case "e":
-                """
-                Definir uma logica para excluir 
+                print('|')
+                print('|')
                 
-                """
-                pass
-            case "q":
-                break
+                if village in thread_training_infantry:
+                    print('| Infantaria:')
+
+                    aux = 1
+                    for infantry in thread_training_infantry[village].training['infantry']:
+                        if thread_training_infantry[village].training["train_number"][aux-1] != '0':
+                            print(f'| -> {infantry}: {thread_training_infantry[village].training["train_number"][aux-1]}')
+                        aux += 1
+
+                    if thread_training_infantry[village].next_training:
+                        print(f'| O proximo treino será realizado as {thread_training_infantry[village].next_training}')
+
+                print('|')
+                print('|')
+
+                if village in thread_training_cavalry:
+                    print('| Cavalaria:')
+
+                    aux = 1
+                    for cavalry in thread_training_cavalry[village].training['cavalry']:
+                        if thread_training_cavalry[village].training["train_number"][aux-1] != '0':
+                            print(f'| -> {cavalry}: {thread_training_cavalry[village].training["train_number"][aux-1]}')
+                        aux += 1
+
+                    if thread_training_cavalry[village].next_training:
+                        print(f'| O proximo treino será realizado as {thread_training_cavalry[village].next_training}')
+
+            else:
+                print(F'| Aldeia: {village}')
+                print(f'| -> Nenhuma informação')
+
+            print('|')
+            print('|')
+            print("|___________________________________________________________________________________________")
+            print("| (Q) Sair")
+            option = input('| => ')
+
+            match option.lower():
+                case "q":
+                    break
+
 
 def menu_quit_of_system(travian):
     print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} - Saindo do Travian Village Bot')
@@ -617,12 +714,11 @@ if __name__ == "__main__":
     os.system('cls')
     server, username, password = get_information_on_account()
     print("|___________________________________________________________________________________________")
-    print(f'{datetime.datetime.now().strftime("%H:%M:%S")} | Logando na sua conta, aguarde...')
+    print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} | Logando na sua conta, aguarde...')
     travian = login_on_server(server, username, password)
 
-    # get name village and tribe
-    travian.update_name_villages()
-    travian.get_tribe()
+    # busca informações iniciais
+    travian.get_information()
 
     # Iniciando class Log
     log = Log(travian)
@@ -631,9 +727,7 @@ if __name__ == "__main__":
     database = Database(travian)
 
     # INicializando Variavel de farmlist
-    thread_farmlist = Farmlist(travian)
-    thread_farmlist.daemon = True
-    thread_farmlist.start()
+    start_farmlist = False
 
     # Inicia as threads de construção
     thread_construction = {}
@@ -658,4 +752,5 @@ if __name__ == "__main__":
             case '1':
                 menu_set_village()
             case '2':
-                menu_start_farmlist()
+                # PRECISA SER AJUSTDO CRIANDO UMA CLASS APP E CRIANDO UMA VARIAVEL PARA GUARDAR ESSA INFORMAÇÃO
+                start_farmlist = menu_start_farmlist(start_farmlist)

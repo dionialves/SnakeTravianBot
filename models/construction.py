@@ -3,6 +3,7 @@ import datetime
 from threading import Thread, Event
 
 from models.log import Log
+from models.database import Database
 
 
 class Construction(Thread):
@@ -29,6 +30,7 @@ class Construction(Thread):
         self.event = Event()
         self.travian = travian
         self.log = Log(travian)
+        self.database = Database(travian)
 
     def add(self, village, slot_id, to_level):
         self.list_of_construction.append({
@@ -61,6 +63,7 @@ class Construction(Thread):
 
                 #atualiza o campo em específico 
                 self.travian.update_fields_village(village, [slot_id])
+                self.database.write(str(self.travian.fields))
 
                 current_level = self.travian.fields[village]['level'][int(slot_id)-1]
                 slot_name = self.travian.fields[village]["name"][int(slot_id)-1]
@@ -71,7 +74,7 @@ class Construction(Thread):
                     del self.list_of_construction[0]
                 else:
                     # Verifica se tem alguma construção já em andamento
-                    self.travian.update_building_orders(village)
+                    self.travian.get_building_orders(village)
                     if self.travian.building_ordens[village]:
                         time_in_update = datetime.timedelta(minutes=int(self.travian.building_ordens[village][0][2] / 60 + 2))
 
@@ -87,3 +90,5 @@ class Construction(Thread):
                         else:
                             self.log.write(f'{datetime.datetime.now().strftime("%H:%M:%S")} | {village} -> Sem recursos suficientes para construir, vamos aguardar 10 minutos')
                             self.event.wait(600)
+
+                
