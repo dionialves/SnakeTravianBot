@@ -325,9 +325,9 @@ class Village(object):
 
         self.browser.get(self.server + '/build.php?id=39&gid=16&tt=99')
 
-        if self.browser.find_elements(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div[3]/div/div[1]/div[2]/button[1]'):
-            buttonStartAllList = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div[3]/div/div[1]/div[2]/button[1]')
-            buttonStartAllList.click()
+        buttonStartAllList = self.browser.find_elements(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div[3]/div/div[1]/div[2]/button[1]')
+        if buttonStartAllList:
+            buttonStartAllList[0].click()
             self.list_farms = True
         else:
             self.list_farms = False
@@ -491,10 +491,10 @@ class Village(object):
                     cavalry.append('Sopdu Explorer')
 
                 if self.browser.find_elements(By.NAME, "t5"):
-                    cavalry.append('')
+                    cavalry.append('Anhur Guard')
 
                 if self.browser.find_elements(By.NAME, "t6"):
-                    cavalry.append('')
+                    cavalry.append('Resheph Chariot')
             
             elif self.tribe == 'Hun':
                 if self.browser.find_elements(By.NAME, "t3"):

@@ -468,7 +468,6 @@ def resorurses_and_buildings(travian, name_village):
                     print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} - Ordem de construção adicionado na fila')
                     time.sleep(4)
                     os.system('cls')
-                    break
 
                 else:
                     print('|')

@@ -1,6 +1,7 @@
 import sys
 import time
 import curses
+import pyautogui
 
 
 class App:
@@ -52,17 +53,19 @@ class App:
         self.menu_title = ["Menu Principal"]
         self.initial_line_menu = 7
         self.height = 35
-        self.width = 80
+        self.width = 100
         self.line = 0
 
     def run(self):
         curses.curs_set(0)  # Oculta o cursor
         while True:
             self.stdscr.clear()
+
             curses.start_color()
 
             # Define as dimensões desejadas da tela (altura, largura)
             self.stdscr.resize(self.height, self.width)
+            #curses.resizeterm(self.height, self.width)
 
             # Centralize a janela na tela
             y, x = (curses.LINES - self.height) // 2, (curses.COLS - self.width) // 2
@@ -96,9 +99,6 @@ class App:
 
             # shortcuts
             self.set_footer()
-
-
-
 
             self.stdscr.refresh()
             key = self.stdscr.getch()
@@ -141,7 +141,6 @@ class App:
     
     def page_resources_and_buildins(self, line):
 
-        list = []
         positionY_01 = line
         positionY_02 = line
         positionX = 2
@@ -309,4 +308,7 @@ class App:
 
 
 if __name__ =='__main__':
+    pyautogui.hotkey('alt', 'space')
+    pyautogui.press('x')
+
     curses.wrapper(lambda stdscr: App(stdscr).run())
