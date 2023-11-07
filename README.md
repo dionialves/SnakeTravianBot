@@ -7,3 +7,4 @@ Software criado para automatizar o gerenciamento de contas do joga Travian Legen
 - Construção Automatizada
 - Envio automático de Farmlist
 - Treino automatico de infantaria
+- Treino automatico de Cavalaria

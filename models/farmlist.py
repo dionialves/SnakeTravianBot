@@ -3,6 +3,7 @@ import datetime
 from threading import Thread, Event
 
 from models.log import Log
+from models.browser import Browser
 
 
 class Farmlist(Thread):
@@ -23,8 +24,8 @@ class Farmlist(Thread):
 
         self.order_auto_send_farmlist = {}
         self.event = Event()
-        self.travian = travian
         self.log = Log(travian)
+        self.browser = Browser(travian)
 
     def add(self, start_of_interval, end_of_interval):
         self.order_auto_send_farmlist = {
@@ -38,7 +39,8 @@ class Farmlist(Thread):
 
             if self.order_auto_send_farmlist:
 
-                self.travian.start_all_farm_list()
+                self.browser.add('auto_send_farmlist')
+                #self.travian.start_all_farm_list()
 
                 interval_in_minutes = randint(
                     int(self.order_auto_send_farmlist['start_of_interval']), 

@@ -16,11 +16,11 @@ class InfatryTraining(Thread):
         self.log = Log(travian)
         self.next_training = None
 
-    def add(self, village, infantry, train_number, time):
+    def add(self, village, infantry, number_of_trainings, time):
         self.training = {
             'village': village, 
             'infantry': infantry,
-            'train_number': train_number,
+            'number_of_trainings': number_of_trainings,
             'time': time
         }
 
@@ -51,10 +51,10 @@ class InfatryTraining(Thread):
             if self.training:                
                 aux = 1
                 for infantry in self.training['infantry']:
-                    if int(self.training['train_number'][aux-1]) > 0:
-                        self.travian.train_infantry(self.training['village'], infantry, self.training['train_number'][aux-1])
+                    if int(self.training['number_of_trainings'][aux-1]) > 0:
+                        self.travian.infantry_training(self.training['village'], infantry, self.training['number_of_trainings'][aux-1])
                         
-                        self.log.write(f'{datetime.datetime.now().strftime("%H:%M:%S")} | {self.training["village"]} -> Treinando {self.training["train_number"][aux-1]} unidades de {infantry}')
+                        self.log.write(f'{datetime.datetime.now().strftime("%H:%M:%S")} | {self.training["village"]} -> Treinando {self.training["number_of_trainings"][aux-1]} unidades de {infantry}')
                     aux += 1
 
                 wait = self.ramdow_time(int(self.training['time']))

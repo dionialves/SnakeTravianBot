@@ -4,7 +4,7 @@ from watchdog.events import FileSystemEventHandler
 class Log(FileSystemEventHandler):
     def __init__(self, travian):
         self.travian = travian
-        self.file = f'data/{self.travian.username}-{self.travian.server[8:]}.log'.lower()
+        self.file = f'data\{self.travian.username}-{self.travian.server[8:]}.log'.lower()
 
     def on_modified(self, event):
         if event.src_path == f'.\{self.file}':

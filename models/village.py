@@ -121,7 +121,7 @@ class Village(object):
         """
         options = webdriver.ChromeOptions()
         options.add_experimental_option('excludeSwitches', ['enable-logging'])
-        options.add_argument("--headless=new")
+        #options.add_argument("--headless=new")
         self.browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         self.browser.implicitly_wait(3)
 
@@ -307,13 +307,13 @@ class Village(object):
             "crop": crop.replace(',', '').replace('.', '').replace(' ', '')
         }
 
-    def upgrade_fields_resource(self, village, idField):
+    def upgrade_fields_resource(self, village, slot):
         """
         Nesta função realizaremos a construção ou o upgrade de recursos, recebendo a aldeia e o id do campo
         """
 
         self.browser.get(self.villages[village]['url'])
-        self.browser.get(self.server + '/build.php?id=' + str(idField))
+        self.browser.get(self.server + '/build.php?id=' + str(slot))
         buttonUpgrade = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[3]/div[1]/button')
         
         buttonUpgrade.click()
@@ -333,12 +333,12 @@ class Village(object):
             self.list_farms = False
 
 
-    def check_construction_resources(self, idField):
+    def check_construction_resources(self, slot):
         """
         Esta função checa se na aldeia tem os recursos necessários para a construção desejada
         """
 
-        self.browser.get(self.server + '/build.php?id=' + str(idField))
+        self.browser.get(self.server + '/build.php?id=' + str(slot))
 
         lumber = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[1]/div[1]/div[1]/span').text
         clay = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[1]/div[1]/div[2]/span').text
@@ -511,7 +511,7 @@ class Village(object):
 
             self.troops['cavalry'] = cavalry
 
-    def train_infantry(self, village, infantry, train_number):
+    def infantry_training(self, village, infantry, number_of_trainings):
         if '19' in self.fields[village]['id']:
             self.browser.get(self.villages[village]['url'])
 
@@ -521,12 +521,12 @@ class Village(object):
             code = TROOPS[self.tribe][infantry]
 
             input_number_of_troops = self.browser.find_element(By.NAME, code)
-            input_number_of_troops.send_keys(train_number)
+            input_number_of_troops.send_keys(number_of_trainings)
 
             button = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/form/button')
             button.click()
 
-    def train_cavalry(self, village, cavalry, train_number):
+    def cavalry_training(self, village, cavalry, number_of_trainings):
         if '20' in self.fields[village]['id']:
             self.browser.get(self.villages[village]['url'])
             
@@ -536,7 +536,7 @@ class Village(object):
             code = TROOPS[self.tribe][cavalry]
 
             input_number_of_troops = self.browser.find_element(By.NAME, code)
-            input_number_of_troops.send_keys(train_number)
+            input_number_of_troops.send_keys(number_of_trainings)
 
             button = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/form/button')
             button.click()
@@ -563,25 +563,6 @@ class Village(object):
         
         self.browser.get(f'{self.server}/logout')
         self.browser.quit()
-
-
-if __name__ == '__main__':
-
-    travian = Village()
-
-    travian.server = 'ts3.x1.america.travian.com'
-    travian.username = 'diviks'
-    travian.password = 'alves625'
-
-    village = 'Debian'
-
-    travian.login(travian.server, travian.username, travian.password)
-    travian.update_name_villages()
-    travian.update_all_fields_village(village)
-    travian.get_tribe()
-
-    travian.get_troops_infantary(village)
-    travian.get_troops_cavalry(village)
 
 
 
