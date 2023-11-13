@@ -43,7 +43,9 @@ class Construction(Thread):
     def construction_for_resourses(self, village, toLevel, list_of_ids):
         for to_level in range(1, int(toLevel)+1):
             for slot_id in list_of_ids:
-                if int(self.travian.fields[village]["level"][int(slot_id)-1]) < int(to_level):
+
+                level = self.travian.villages[village]['slot'][slot_id]['level']
+                if int(level) < int(to_level):
                     self.add(village, slot_id, to_level)
 
     def run(self):
@@ -62,11 +64,11 @@ class Construction(Thread):
                 to_level = construction['to_level']
 
                 #atualiza o campo em específico 
-                self.travian.update_fields_village(village, [slot_id])
-                self.database.write(str(self.travian.fields))
+                self.travian.update_only_slots()
+                self.database.write(str(self.travian.villages))
 
-                current_level = self.travian.fields[village]['level'][int(slot_id)-1]
-                slot_name = self.travian.fields[village]["name"][int(slot_id)-1]
+                slot_name = self.travian.villages[village]['slot'][slot_id]['name']
+                current_level = self.travian.villages[village]['slot'][slot_id]['level']
 
                 # Verifica se já esta no nível desejado
                 if int(current_level) >= int(to_level):
@@ -74,12 +76,12 @@ class Construction(Thread):
                     del self.list_of_construction[0]
                 else:
                     # Verifica se tem alguma construção já em andamento
-                    self.travian.get_building_orders(village)
-                    if self.travian.building_ordens[village]:
-                        time_in_update = datetime.timedelta(minutes=int(self.travian.building_ordens[village][0][2] / 60 + 2))
+                    self.travian.get_upgrade_orders(village)
+                    if self.travian.upgrade_orders[village]:
+                        time_in_update = datetime.timedelta(minutes=int(self.travian.upgrade_orders[village][0][2] / 60 + 2))
 
                         self.log.write(f'{datetime.datetime.now().strftime("%H:%M:%S")} | {village} -> Construção na fila, tempo de espera: {time_in_update} minutos')
-                        self.event.wait(int(self.travian.building_ordens[village][0][2] + self.wait))
+                        self.event.wait(int(self.travian.upgrade_orders[village][0][2] + self.wait))
 
                     else:
                         # Verifica se a aldeia tem recursos para fazer a construção

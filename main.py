@@ -4,7 +4,7 @@ import datetime
 import sys
 from watchdog.observers import Observer
 
-from models.village import Village
+from models.travian import Travian
 from models.construction import Construction
 from models.log import Log
 from models.farmlist import Farmlist
@@ -16,7 +16,7 @@ from models.browser import Browser
 
 class App:
     def __init__(self):
-        self.travian = Village()
+        self.travian = Travian()
         self.current_village = ''
 
         self.thread_farmlist = {}
@@ -56,7 +56,7 @@ class App:
 
     def instance(self):
         # busca informações iniciais
-        self.travian.get_information()
+        self.travian.update()
 
         # Inicia Log
         self.log = Log(self.travian)
@@ -128,7 +128,7 @@ class App:
                         message = f'{datetime.datetime.now().strftime("%H:%M:%S")} | {self.current_village} -> Banco de dados carregado com sucesso'
                         self.log.write(message)
 
-                        self.travian.fields = self.database.upload_data()
+                        self.travian.villages = self.database.upload_data()
                     
                     else:
                         message = f'{datetime.datetime.now().strftime("%H:%M:%S")} | {self.current_village} -> Aldeia não encontrada no banco de dados'
@@ -139,8 +139,8 @@ class App:
                         self.log.write(message)
                         print(message)
 
-                        self.travian.update_all_fields_village(self.current_village)
-                        self.database.write(self.travian.fields)
+                        self.travian.update()
+                        self.database.write(self.travian.villages)
 
                     self.menu_of_village()
                 else:
@@ -156,7 +156,7 @@ class App:
             start_of_interval = 20
             end_of_interval = 40
 
-            if self.travian.list_farms:
+            if self.travian.get_farmlist_is_created():
                 if self.thread_farmlist:
                     print(f'| --> Farmlist esta ativado com intervalo automatico entre {start_of_interval} e {end_of_interval} minutos')
                     print('|')
@@ -186,7 +186,7 @@ class App:
 
                     case 'a':
                         if not self.thread_farmlist:
-                            self.thread_farmlist = Farmlist(self.travian)
+                            self.thread_farmlist = Farmlist(self.travian, self.browser)
                             self.thread_farmlist.daemon = True
                             self.thread_farmlist.start()
                         
@@ -219,7 +219,6 @@ class App:
             print("| 2 - Atualizar Aldeia")
             print("| 3 - Treino de Infantaria")
             print('| 4 - Treino de Cavalaria')
-            print('| 5 - Monitor')
             print("|___________________________________________________________________________________________")
             print("| (Q) Sair")
             option = input("| => ")
@@ -233,8 +232,6 @@ class App:
                     self.page_infantry()
                 case "4":
                     self.page_cavalry()
-                case "5":
-                    self.monitor()
                 case "q":
                     break
 
@@ -246,12 +243,16 @@ class App:
             print('| Id | Level | Descrição')
 
             list = []
-            for slot in range(0, 40):
-                if self.travian.fields[self.current_village]["level"][int(slot)] != '0' or slot < 18:
-                    print(f'| Id:{slot+1} - ({self.travian.fields[self.current_village]["level"][int(slot)]}) {self.travian.fields[self.current_village]["name"][int(slot)]}')
-                    
-                    # Essa lista será usada para verificar se o usuário selecionou um item da lista
-                    list.append(str(slot+1))
+
+            for slot in self.travian.villages[self.current_village]['slot']:
+                name = self.travian.villages[self.current_village]['slot'][slot]['name']
+                level = self.travian.villages[self.current_village]['slot'][slot]['level']
+
+
+                if name != 'Empty':
+                    print(f'| Id:{slot} - ({level}) {name} ')
+
+                    list.append(slot)
 
             print('|')
             print('|')
@@ -267,7 +268,7 @@ class App:
 
                     if slot_id.isdigit() and to_level.isdigit() and slot_id in list:
 
-                        if not self.thread_construction:
+                        if not self.thread_construction.get(self.current_village):
                             self.thread_construction[self.current_village] = Construction(self.travian)
                             self.thread_construction[self.current_village].daemon = True
                             self.thread_construction[self.current_village].start()
@@ -291,12 +292,17 @@ class App:
                     to_level = input('| Para qual level: ')
 
                     if to_level.isdigit():
+                        if not self.thread_construction.get(self.current_village):
+                            self.thread_construction[self.current_village] = Construction(self.travian)
+                            self.thread_construction[self.current_village].daemon = True
+                            self.thread_construction[self.current_village].start()
+                    
                         for level in range(1, int(to_level)+1):
-                            for slot_id in range(1,19):
-                                current_level = self.travian.fields[self.current_village]['level'][int(slot_id)-1]
+                            for slot in range(1,19):
+                                current_level = self.travian.villages[self.current_village]['slot'][str(slot)]['level']
 
                                 if int(current_level) < int(level):
-                                    self.thread_construction[self.current_village].add(self.current_village, slot_id, level)
+                                    self.thread_construction[self.current_village].add(self.current_village, str(slot), str(level))
 
                         print('|')
                         print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} - Ordem de construção adicionado na fila')
@@ -316,33 +322,65 @@ class App:
             print(f'| Main Menu -> {self.current_village} -> Resources and Buildings - List')
             print('|')
 
-            if self.thread_construction[self.current_village].list_of_construction:
-                aux = 1
-                for order in self.thread_construction[self.current_village].list_of_construction:
-                    print(f'| {aux} - {order["village"]} construindo {self.travian.fields[self.current_village]["name"][int(order["slot_id"])-1]} para o level {order["to_level"]} ')
-                    aux += 1
+            # Verifica se existe alguma ordem em andamento
+            self.travian.get_upgrade_orders(self.current_village)
 
-                print('|')
-                print("|___________________________________________________________________________________________")
-                print('| (D)elete | (Q)uit')
-                option = input('| => ')
+            if self.travian.upgrade_orders.get(self.current_village):
+                print(f'| ')
+                print(f'| ## Sendo construído no momento:')
+                print(f'| ')
+                for order in self.travian.upgrade_orders[self.current_village]:
+                    name = order[0]
+                    level = order[1]
 
-                match option.lower():
-                    case 'd':
-                        is_true = input('| Tem certeza que deseja excluir todos os itens da lista? S/N: ')
-                        if is_true.lower() == 's':
-                            self.thread_construction[self.current_village] = {}
-                            self.thread_construction[self.current_village] = Construction(self.travian)
-                            self.thread_construction[self.current_village].daemon = True
-                            self.thread_construction[self.current_village].start()
+                    print(f'| -> {name} para o level {level}')
 
-                            print('| Itens excluidos como solicitado.')
-                            time.sleep(4)
-                    case 'q':
-                        break
-                            
+            print(f'| ')
+            if self.thread_construction.get(self.current_village):
+                if self.thread_construction[self.current_village].list_of_construction:
+                    aux = 1
+                    print(f'| ')
+                    print(f'| ## Na fila para construção:')
+                    print(f'| ')
+                    for order in self.thread_construction[self.current_village].list_of_construction:
+                        name = self.travian.villages[self.current_village]['slot'][order["slot_id"]]['name']
+
+                        print(f'| {aux} - {name} para o level {order["to_level"]} ')
+                        aux += 1
+
+                    print('|')
+                    print("|___________________________________________________________________________________________")
+                    print('| (D)elete | (Q)uit')
+                    option = input('| => ')
+
+                    match option.lower():
+                        case 'd':
+                            is_true = input('| Tem certeza que deseja excluir todos os itens da lista? S/N: ')
+                            if is_true.lower() == 's':
+                                self.thread_construction[self.current_village] = {}
+                                self.thread_construction[self.current_village] = Construction(self.travian)
+                                self.thread_construction[self.current_village].daemon = True
+                                self.thread_construction[self.current_village].start()
+
+                                print('| Itens excluidos como solicitado.')
+                                time.sleep(4)
+                        case 'q':
+                            break
+                                
+                else:
+                    print('| ')
+                    print('| ## Nenhuma construção na fila')
+                    print('|')
+                    print("|___________________________________________________________________________________________")
+                    print('| (Q) Sair')
+                    option = input('| => ')
+
+                    match option.lower():
+                        case 'q':
+                            break
             else:
-                print('| Nenhuma construção na fila')
+                print('|')
+                print('| ## Nenhuma construção na fila')
                 print('|')
                 print("|___________________________________________________________________________________________")
                 print('| (Q) Sair')
@@ -360,8 +398,8 @@ class App:
 
         print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} - Atualizando dados, isso pode levar alguns minutos')
 
-        self.travian.update_all_fields_village(self.current_village)
-        self.database.write(self.travian.fields)
+        self.travian.update()
+        self.database.write(self.travian.villages)
 
     def page_infantry(self):
         self.travian.get_troops_infantary(self.current_village)
@@ -595,79 +633,6 @@ class App:
                 case 'n':
                     break
 
-    def monitor(self):
-        while True:
-            self.header()
-            print(f'| Main Menu -> {self.current_village} -> Monitor')
-            print('|')
-            print('|')
-
-            if self.thread_farmlist:
-                print('| Informações Gerais')
-                print('|')
-                print(f'| --> Farmlist esta ativado!')
-                print('|')
-            
-            if self.thread_construction[self.current_village].list_of_construction or (self.current_village in self.thread_training_infantry) or self.current_village in self.thread_training_cavalry or self.travian.building_ordens.get(self.current_village):
-                aux = 1
-                if self.thread_construction[self.current_village].list_of_construction or self.travian.building_ordens[self.current_village]:
-                    print('|')
-                    print('| Construções:')
-                    if self.travian.building_ordens[self.current_village]:
-                        print(f'| -> {aux} - {self.current_village} construindo {self.travian.building_ordens[self.current_village][0][0]} para o level {self.travian.building_ordens[self.current_village][0][1]} ')
-                    
-                    if len(self.travian.building_ordens[self.current_village]) == 2:
-                        print(f'|    {aux} - {self.current_village} construindo {self.travian.building_ordens[self.current_village][1][0]} para o level {self.travian.building_ordens[self.current_village][1][1]} ')
-
-                    for order in self.thread_construction[self.current_village].list_of_construction[:2]:
-                        aux += 1
-                        print(f'|    {aux} - {order["village"]} construindo {self.travian.fields[self.current_village]["name"][int(order["slot_id"])-1]} para o level {order["to_level"]} ')
-                        
-
-                print('|')
-                print('|')
-                
-                if self.current_village in self.thread_training_infantry:
-                    print('| Infantaria:')
-
-                    aux = 1
-                    for infantry in self.thread_training_infantry[self.current_village].training['infantry']:
-                        if self.thread_training_infantry[self.current_village].training["train_number"][aux-1] != '0':
-                            print(f'| -> {infantry}: {self.thread_training_infantry[self.current_village].training["train_number"][aux-1]}')
-                        aux += 1
-
-                    if self.thread_training_infantry[self.current_village].next_training:
-                        print(f'| O proximo treino será realizado as {self.thread_training_infantry[self.current_village].next_training}')
-
-                print('|')
-                print('|')
-
-                if self.current_village in self.thread_training_cavalry:
-                    print('| Cavalaria:')
-
-                    aux = 1
-                    for cavalry in self.thread_training_cavalry[self.current_village].training['cavalry']:
-                        if self.thread_training_cavalry[self.current_village].training["train_number"][aux-1] != '0':
-                            print(f'| -> {cavalry}: {self.thread_training_cavalry[self.current_village].training["train_number"][aux-1]}')
-                        aux += 1
-
-                    if self.thread_training_cavalry[self.current_village].next_training:
-                        print(f'| O proximo treino será realizado as {self.thread_training_cavalry[self.current_village].next_training}')
-
-            else:
-                print(F'| Aldeia: {self.current_village}')
-                print(f'| -> Nenhuma informação')
-
-            print('|')
-            print('|')
-            print("|___________________________________________________________________________________________")
-            print("| (Q)uit")
-            option = input('| => ')
-
-            match option.lower():
-                case "q":
-                    break
-
     def print_log(self):
         log = Log(self.travian)
         log.print_on_file()
@@ -702,7 +667,7 @@ class App:
     def menu_quit_of_system(self):
         print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} - Saindo do Travian Village Bot')
         self.travian.quit()
-        sys.exit()
+        os._exit()
 
 
 if __name__ == "__main__":

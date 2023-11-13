@@ -5,22 +5,52 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 
 BUILDING = {
-    '1': 'lumber',
-    '2': 'clay',
-    '3': 'iron',
-    '4': 'crop',
-    '10': 'warehouse',
-    '11': 'Granary',
-    '13': 'Smithy',
-    '15': 'Main Building',
-    '17': 'Marketplace',
-    '18': 'Embassy',
-    '19': 'Barracks',
-    '20': 'Stable',
-    '22': 'Academy',
-    '23': 'Cranny',
-    '25': 'Residence',
-    '34': "Stonemason's Lodge"
+    'gid0': 'Empty',
+    'gid1': 'Woodcutter',
+    'gid2': 'Clay Pit',
+    'gid3': 'Iron Mine',
+    'gid4': 'Cropland',
+    'gid5': 'Sawmill ',
+    'gid6': 'Brickyard',
+    'gid7': 'Iron Foundry',
+    'gid8': 'Grain Mill',
+    'gid9': 'Bakery',
+    'gid10': 'Warehouse',
+    'gid11': 'Granary',
+    'gid12': 'None',
+    'gid13': 'Smithy',
+    'gid14': 'None',
+    'gid15': 'Main Building',
+    'gid16': 'Rally Point',
+    'gid17': 'Marketplace',
+    'gid18': 'Embassy',
+    'gid19': 'Barracks',
+    'gid20': 'Stable',
+    'gid21': 'Workshop',
+    'gid22': 'Academy',
+    'gid23': 'Cranny',
+    'gid24': 'None',
+    'gid25': 'Residence',
+    'gid26': 'None',
+    'gid27': 'None',
+    'gid28': 'None',
+    'gid29': 'None',
+    'gid30': 'None',
+    'gid31': 'None',
+    'gid32': 'Earth Wall',
+    'gid33': 'Palisade',
+    'gid34': "Stonemason's Lodge",
+    'gid35': "None",
+    'gid36': "None",
+    'gid37': "None",
+    'gid38': "None",
+    'gid39': "None",
+    'gid40': "None",
+    'gid41': "None",
+    'gid42': "Stone Wall"
+
+     
+
 }
 
 TROOPS = {
@@ -87,7 +117,7 @@ TROOPS = {
 
 }
 
-class Village(object):
+class Travian(object):
     def __init__(self):
         self.server = str()
         self.username = str()
@@ -95,25 +125,11 @@ class Village(object):
         self.browser = None
         self.villages = {}
         self.fields = {}
-        self.building_ordens = {}
+        self.upgrade_orders = {}
         self.resources = {}
         self.order_queue = None
         self.troops = {}
         self.list_farms = False
-
-    def get_information(self):
-        # Pega o nome da tribo
-        self.get_tribe()
-        # Obtem o nome das aldeias
-        self.update_name_villages()
-        # Verifica se tem ordens de contrução
-        for village in self.villages:
-            self.get_building_orders(village)
-
-        # Verifica se existe 
-        self.browser.get(self.server + '/build.php?id=39&gid=16&tt=99')
-        if self.browser.find_elements(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div[3]/div/div[1]/div[2]/button[1]'):
-            self.list_farms = True
 
     def instance_browser(self):
         """
@@ -147,6 +163,25 @@ class Village(object):
 
         self.browser.find_element(By.XPATH, "/html/body/div[3]/div[2]/div[2]/div[2]/div/div/div[1]/form/table/tbody/tr[5]/td[2]/button").click()
 
+    def update(self):
+        # Obtem o nome das aldeias
+        self.get_name_villages()
+        # Obtem o nome da tribo
+        self.get_tribe()
+        # Atualiza todos os slots de todas as aldeias
+        self.update_only_slots()
+
+    def update_only_slots(self):
+        # Atualiza as construções e seus leveis de cada aldeia
+        for village in self.villages:
+            # Acessa a aldeia 
+            self.browser.get(self.villages[village]['url']) 
+            # inicializando a slot como um dicionário
+            self.villages[village]['slot'] = {}
+            # Atualizando cada aldeia, recursos e construções
+            self.get_slots_resources(village)
+            self.get_slots_buildings(village)
+
     def get_tribe(self):
         self.browser.get(f'{self.server}/profile')
 
@@ -159,78 +194,59 @@ class Village(object):
         else:
             self.tribe = 'Roman'
 
-
-    def update_all_fields_village(self, village):
+    def get_slots_resources(self, village):
         """
             Atuliza todos os campos de construção da aldeia, do 1 ao 40. De uma aldeia em uma aldeia específica
         """
-        fields = {}
-        list_fields = []
-        list_level = []
-        list_slot_id = []
-        list_building_id = []
 
-        self.browser.get(self.villages[village]['url'])
+        self.browser.get(f'{self.server}/dorf1.php')
 
-        for x in range(1,41):
-            self.browser.get(f'{self.server}/build.php?id={x}')
+        for x in range(2, 20):
 
-            # Obtem o Id do da construção
-            url = self.browser.current_url.split('?')[1]
-            slot_id = url.split('&')[0].split('=')[1]
+            elemento = self.browser.find_element(By.XPATH, f'//*[@id="resourceFieldContainer"]/a[{x}]')
+            list_class = elemento.get_attribute('class').split()
 
-            name = self.browser.find_elements(By.XPATH, '//*[@id="content"]/h1')[0].text
+            if 'underConstruction' in list_class:
+                del list_class[5]
 
-            if self.browser.find_elements(By.CLASS_NAME, 'buildingWrapper'):
-                name_and_level = ['Zona Livre', '0']
-                building_id = '0'
-            else:
-                name_and_level = self.separate_name(name)
-                building_id = url.split('&')[1].split('=')[1]
+            slot = (list_class[4].split('buildingSlot')[1])
+            name = (BUILDING[list_class[3]])
 
-            list_slot_id.append(slot_id)
-            list_building_id.append(building_id)
-            list_fields.append(name_and_level[0])
-            list_level.append(name_and_level[1])
+            level = (list_class[5].split('level')[1])
 
-        fields['slot'] = list_slot_id
-        fields['id'] = list_building_id
-        fields['name'] = list_fields
-        fields['level'] = list_level
+            self.villages[village]['slot'].update(
+                {
+                    slot: {
+                        'name': name,
+                        'level': level
+                    }
+            })
+                
+    def get_slots_buildings(self, village):
 
-        self.fields[village] = fields
+        self.browser.get(f'{self.server}/dorf2.php')
+        level = 0
 
-    def update_fields_village(self, village, idsFields):
-        """
-            Atuliza os campos de construção da aldeia, conforme o id passado pela na função.
-        """
+        for x in range(1, 23):
 
-        self.browser.get(self.villages[village]['url'])
+            elemento = self.browser.find_element(By.XPATH, f'//*[@id="villageContent"]/div[{x}]')                                       
+            list_class = elemento.get_attribute('class').split()
 
-        for id in idsFields:
-            self.browser.get(f'{self.server}/build.php?id={id}')
+            slot = (list_class[1].split('a')[1])
+            name = (BUILDING[f'gid{list_class[2].split("g")[1]}'])
 
-            # Obtem o Id do da construção
-            url = self.browser.current_url.split('?')[1]
-            slot_id = url.split('&')[0].split('=')[1]
-            building_id = url.split('&')[1].split('=')[1]
+            if name != 'Empty':
+                level = self.browser.find_element(By.XPATH, f'//*[@id="villageContent"]/div[{x}]/a/div').text
 
-            # Pega o titulo da pagina para obter o level da construção
-            name = self.browser.find_elements(By.XPATH, '//*[@id="content"]/h1')[0].text
+            self.villages[village]['slot'].update(
+                {
+                    slot: {
+                        'name': name,
+                        'level': level
+                    }
+            })
 
-            if self.browser.find_elements(By.CLASS_NAME, 'buildingWrapper'):
-                name_and_level = ['Zona Livre', '0']
-                building_id = '0'
-            else:
-                name_and_level = self.separate_name(name)
-
-            self.fields[village]['slot'][int(id)-1] = slot_id
-            self.fields[village]['id'][int(id)-1] = building_id
-            self.fields[village]['name'][int(id)-1] = name_and_level[0]
-            self.fields[village]['level'][int(id)-1] = name_and_level[1]
-
-
-    def update_name_villages(self):
+    def get_name_villages(self):
         """
         Autiliza o nome da aldeia e também sua URL de acesso
         """
@@ -258,7 +274,7 @@ class Village(object):
 
                 self.villages[list_village[x]] = {'url': url, 'id': id_village}
 
-    def get_building_orders(self, village):
+    def get_upgrade_orders(self, village):
         """
         Escaneia de todas de uma ldeia específica as ordens de construção.
         """
@@ -266,29 +282,50 @@ class Village(object):
         self.browser.get(self.villages[village]['url'])
 
         drive = self.browser.find_elements(By.XPATH, '//*[@id="contentOuterContainer"]/div/div[2]/div[1]/ul')
+        list_orders = []
 
-        orders = []
         if drive:
             # Ajustando string
             drive = drive[0].text
             drive = drive.split('\n')
 
-            # Obtendo as informações da primeira ordem de construção
-            orders.append(self.separate_name(drive[0]))
-            orders[0].append(self.convert_string_to_secunds(drive[1]))
+            # Obtendo nome,level e segundos do upgrade
+            order = self.set_name_and_level(drive[0])
+            secunds = self.convert_string_to_secunds(drive[1])
+
+            order.append(secunds)
+            list_orders.append(order)
 
             # Obtendo informações da segunda ordem de construção
             if len(drive) == 4:
-                orders.append(self.separate_name(drive[2]))
-                orders[1].append(self.convert_string_to_secunds(drive[3]))
+                # Obtendo nome,level e segundos do upgrade do segundo upgrade
+                order = self.set_name_and_level(drive[2])
+                secunds = self.convert_string_to_secunds(drive[3])
 
-        self.building_ordens[village] = orders
+                order.append(secunds)
+                list_orders.append(order)
 
+        self.upgrade_orders[village] = list_orders
+
+    def set_name_and_level(self, order):
+        order = order.split()
+
+        del order[-2]
+        if len(order) > 2:
+            order[0] = f'{order[0]} {order[1]}'
+            del order[1]
+
+        return order
+    
+    def convert_string_to_secunds(self, time):
+        construction = time.split(':')
+        secunds = (int(construction[0])*3600) + (int(construction[1])*60) + int(construction[2][0:2])
+
+        return secunds
+    
     def get_resources(self, village):
         """
         Escaneia os recursos disponíveis em uma aldeia
-
-        Criar um validador de informação, pois o recurso lumber esta retornando com a seguinte informação: \u202d2878\u202c
         """
 
         self.browser.get(self.villages[village]['url']) 
@@ -307,37 +344,40 @@ class Village(object):
             "crop": crop.replace(',', '').replace('.', '').replace(' ', '')
         }
 
-    def upgrade_fields_resource(self, village, slot):
+    def upgrade_to_level(self, village, slot):
         """
         Nesta função realizaremos a construção ou o upgrade de recursos, recebendo a aldeia e o id do campo
         """
 
         self.browser.get(self.villages[village]['url'])
-        self.browser.get(self.server + '/build.php?id=' + str(slot))
+        self.browser.get(self.server + '/build.php?id=' + str(slot) + '&tt=0')
         buttonUpgrade = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[3]/div[1]/button')
         
         buttonUpgrade.click()
 
-    def start_all_farm_list(self):
-        """
-        Nesta função iniciamos o assalto de todas as listas de farms contidas na aldeia
-        """
-
+    def auto_send_farmlist(self):
+        
         self.browser.get(self.server + '/build.php?id=39&gid=16&tt=99')
 
         buttonStartAllList = self.browser.find_elements(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div[3]/div/div[1]/div[2]/button[1]')
         if buttonStartAllList:
             buttonStartAllList[0].click()
-            self.list_farms = True
+
+    def get_farmlist_is_created(self):
+        self.browser.get(self.server + '/build.php?id=39&gid=16&tt=99')
+
+        xpth = '/html/body/div[3]/div[3]/div[3]/div[2]/div/div[3]/div/div[1]/div[2]/button[1]'
+        if self.browser.find_elements(By.XPATH, xpth):
+            return True
         else:
-            self.list_farms = False
+            return False
 
-
-    def check_construction_resources(self, slot):
+    def check_construction_resources(self, village, slot):
         """
         Esta função checa se na aldeia tem os recursos necessários para a construção desejada
         """
 
+        self.browser.get(self.villages[village]['url'])
         self.browser.get(self.server + '/build.php?id=' + str(slot))
 
         lumber = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[1]/div[1]/div[1]/span').text
@@ -353,48 +393,48 @@ class Village(object):
         return {'lumber': lumber, 'clay': clay, 'iron': iron, 'crop': crop}
 
     def get_only_crop(self, village):
-        list_id_crop = []
+        croplands = []
 
-        for x in range(0,40):
-            id = self.fields[village]['id'][x]
-            if id == '4':
-                list_id_crop.append(self.fields[village]['slot'][x])
+        for slot in self.villages[village]['slot']:
+            name = self.villages[village]['slot'][slot]['name']
+            if name == 'Cropland':
+                croplands.append(slot)
 
-        return list_id_crop
+        return croplands
     
     def get_no_crop(self, village):
-        list_id_no_crop = []
+        fields = []
 
-        for x in range(0,40):
-            id = self.fields[village]['id'][x]
-            if id in ('1', '2', '3',):
-                list_id_no_crop.append(self.fields[village]['slot'][x])
+        for slot in self.villages[village]['slot']:
+            name = self.villages[village]['slot'][slot]['name']
+            if name in ('Woodcutter', 'Clay Pit', 'Iron Mine'):
+                fields.append(slot)
 
-        return list_id_no_crop
+        return fields
 
-    def check_resources_for_update_slot(self, name_village, id_field):
+    def check_resources_for_update_slot(self, village, id_field):
         # Atualiza os recursos da aldeia
-        self.get_resources(name_village)
+        self.get_resources(village)
 
         # retorna lista com recursos necessários para fazer a construção
-        resources = self.check_construction_resources(id_field)
+        resources = self.check_construction_resources(village, id_field)
 
         # Verifica se tem os rercursos necessário para fazer a construção
-        if (int(self.resources[name_village]['lumber']) >= int(resources['lumber']) and
-            int(self.resources[name_village]['clay']) >= int(resources['clay'])  and
-            int(self.resources[name_village]['iron']) >= int(resources['iron'])  and
-            int(self.resources[name_village]['crop']) >= int(resources['crop'])):
+        if (int(self.resources[village]['lumber']) >= int(resources['lumber']) and
+            int(self.resources[village]['clay']) >= int(resources['clay'])  and
+            int(self.resources[village]['iron']) >= int(resources['iron'])  and
+            int(self.resources[village]['crop']) >= int(resources['crop'])):
             return True
         else:
             return False
 
     def get_troops_infantary(self, village):
-        if '19' in self.fields[village]['id']:
+
+        is_created, slot = self.get_barracks_is_created(village)
+        if is_created:
             self.browser.get(self.villages[village]['url'])
 
-            slot_build = self.fields[village]['slot'][self.fields[village]['id'].index('19')]
-
-            self.browser.get(f'{self.server}/build.php?id={slot_build}')
+            self.browser.get(f'{self.server}/build.php?id={slot}')
 
             infantry = []
 
@@ -448,12 +488,12 @@ class Village(object):
             self.troops['infantry'] = infantry
 
     def get_troops_cavalry(self, village):
-        if '20' in self.fields[village]['id']:
+
+        is_created, slot = self.get_stable_is_created(village)
+        if is_created:
             self.browser.get(self.villages[village]['url'])
 
-            slot_build = self.fields[village]['slot'][self.fields[village]['id'].index('20')]
-
-            self.browser.get(f'{self.server}/build.php?id={slot_build}')
+            self.browser.get(f'{self.server}/build.php?id={slot}')
 
             cavalry = []
             if self.tribe == 'Gaul':
@@ -512,11 +552,13 @@ class Village(object):
             self.troops['cavalry'] = cavalry
 
     def infantry_training(self, village, infantry, number_of_trainings):
-        if '19' in self.fields[village]['id']:
+
+        is_created, slot = self.get_barracks_is_created(village)
+
+        if is_created:
             self.browser.get(self.villages[village]['url'])
 
-            slot_build = self.fields[village]['slot'][self.fields[village]['id'].index('19')]
-            self.browser.get(f'{self.server}/build.php?id={slot_build}')
+            self.browser.get(f'{self.server}/build.php?id={slot}')
 
             code = TROOPS[self.tribe][infantry]
 
@@ -527,11 +569,13 @@ class Village(object):
             button.click()
 
     def cavalry_training(self, village, cavalry, number_of_trainings):
-        if '20' in self.fields[village]['id']:
+
+        is_created, slot = self.get_stable_is_created(village)
+
+        if is_created:
             self.browser.get(self.villages[village]['url'])
             
-            slot_build = self.fields[village]['slot'][self.fields[village]['id'].index('20')]
-            self.browser.get(f'{self.server}/build.php?id={slot_build}')
+            self.browser.get(f'{self.server}/build.php?id={slot}')
 
             code = TROOPS[self.tribe][cavalry]
 
@@ -541,21 +585,24 @@ class Village(object):
             button = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/form/button')
             button.click()
 
-    def separate_name(self, name):
-        """
-        Utilitário para limpar a string recebida do site
-        """
-        result = []
-        result.append(name[0:name.find('N')-1])
-        result.append(name[len(name)-2:len(name)].split()[0])
-        return result
+    def get_barracks_is_created(self, village):
+        for slot in self.villages[village]['slot']:
+            name = self.villages[village]['slot'][slot]['name']
+
+            if name == 'Barracks':
+                return True, slot
+            
+        return False, None
+
+    def get_stable_is_created(self, village):
+        for slot in self.villages[village]['slot']:
+            name = self.villages[village]['slot'][slot]['name']
+
+            if name == 'Stable':
+                return True, slot
+            
+        return False, None
     
-    def convert_string_to_secunds(self, time):
-        construction = time.split(':')
-        secunds = (int(construction[0])*3600) + (int(construction[1])*60) + int(construction[2][0:2])
-
-        return secunds
-
     def quit(self, *args):
         """
         Responsável por fechar o navegador interno
@@ -565,4 +612,25 @@ class Village(object):
         self.browser.quit()
 
 
+if __name__ == "__main__":
+    """ 
+    from selenium.common.exceptions import NoSuchWindowException
+    from requests.exceptions import ConnectionError
 
+    travian = Village()
+
+    try:
+        travian.instance_browser()
+        travian.browser.get("https://www.google.com")
+
+    except NoSuchWindowException as e:
+        travian.instance_browser()
+        time.sleep(1)
+        travian.browser.get("https://www.google.com")
+
+    except ConnectionError as e:
+        print("Parece que esta sem acesso a internet", e)
+
+    except Exception as e:
+        print("Erro genérico:", e)"""
+    

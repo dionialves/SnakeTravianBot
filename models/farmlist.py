@@ -19,13 +19,13 @@ class Farmlist(Thread):
     to_level = level a ser atualizado
 
     """
-    def __init__(self, travian):
+    def __init__(self, travian, browser):
         super().__init__()
 
         self.order_auto_send_farmlist = {}
         self.event = Event()
         self.log = Log(travian)
-        self.browser = Browser(travian)
+        self.browser = browser
 
     def add(self, start_of_interval, end_of_interval):
         self.order_auto_send_farmlist = {

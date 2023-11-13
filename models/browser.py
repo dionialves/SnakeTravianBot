@@ -14,7 +14,7 @@ class Browser(Thread):
 
         return True
 
-    def auto_send_farmlist(self, village) -> bool:
+    def auto_send_farmlist(self, ) -> bool:
         self.travian.start_all_farm_list()
 
         return True
@@ -40,7 +40,7 @@ class Browser(Thread):
                 self.tasks.append([task, {'village': args['village']}])
 
             case 'auto_send_farmlist':
-                self.tasks.append([task, {'village': args['village']}])
+                self.tasks.append([task])
 
             case 'construction':
                 self.tasks.append([task, {'village': args['village'], 'slot': args['slot']}])
@@ -73,7 +73,7 @@ class Browser(Thread):
                         no_errors = self.update_slots(task[1]['village'])
 
                     case 'auto_send_farmlist':
-                        no_errors = self.auto_send_farmlist(task[1]['village'])
+                        no_errors = self.auto_send_farmlist()
 
                     case 'construction':
                         no_errors = self.construction(task[1]['village'], task[1]['slot'])
