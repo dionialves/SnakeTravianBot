@@ -25,6 +25,7 @@ class Farmlist(Thread):
         self.order_auto_send_farmlist = {}
         self.event = Event()
         self.log = Log(travian)
+        self.travian = travian
         self.browser = browser
 
     def add(self, start_of_interval, end_of_interval):
@@ -39,8 +40,8 @@ class Farmlist(Thread):
 
             if self.order_auto_send_farmlist:
 
-                self.browser.add('auto_send_farmlist')
-                #self.travian.start_all_farm_list()
+                #self.browser.add('auto_send_farmlist')
+                self.travian.auto_send_farmlist()
 
                 interval_in_minutes = randint(
                     int(self.order_auto_send_farmlist['start_of_interval']), 

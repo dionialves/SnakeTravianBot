@@ -64,6 +64,7 @@ class App:
 
         # Inicia database
         self.database = Database(self.travian)
+        self.database.write(self.travian.villages)
 
     def run(self):
         self.login()

@@ -32,11 +32,11 @@ BUILDING = {
     'gid24': 'None',
     'gid25': 'Residence',
     'gid26': 'None',
-    'gid27': 'None',
+    'gid27': 'Town Hall',
     'gid28': 'None',
-    'gid29': 'None',
+    'gid29': "Hero's Mansion",
     'gid30': 'None',
-    'gid31': 'None',
+    'gid31': 'Palace',
     'gid32': 'Earth Wall',
     'gid33': 'Palisade',
     'gid34': "Stonemason's Lodge",
@@ -181,6 +181,23 @@ class Travian(object):
             # Atualizando cada aldeia, recursos e construções
             self.get_slots_resources(village)
             self.get_slots_buildings(village)
+
+    def update_only_slot(self, village, slot):
+
+        self.browser.get(self.villages[village]['url'])
+        self.browser.get(f'{self.server}build.php?id={slot}')
+        xpath = '//*[@id="build"]'
+
+        element = self.browser.find_elements(By.XPATH, xpath)
+
+        if element:                                 
+            list_class = element[0].get_attribute('class').split()
+
+            level = list_class[1]
+            level = level.split('level')
+            level = level[1]
+
+            self.villages[village]['slot'][slot]['level'] = level
 
     def get_tribe(self):
         self.browser.get(f'{self.server}/profile')
@@ -364,13 +381,20 @@ class Travian(object):
             buttonStartAllList[0].click()
 
     def get_farmlist_is_created(self):
-        self.browser.get(self.server + '/build.php?id=39&gid=16&tt=99')
 
-        xpth = '/html/body/div[3]/div[3]/div[3]/div[2]/div/div[3]/div/div[1]/div[2]/button[1]'
-        if self.browser.find_elements(By.XPATH, xpth):
-            return True
-        else:
-            return False
+        for village in self.villages:
+            for slot in self.villages[village]['slot']:
+
+                name = self.villages[village]['slot'][slot]['name']
+                if name == 'Rally Point':
+                    
+                    self.browser.get(self.villages[village]['url'])
+                    self.browser.get(self.server + '/build.php?id=39&gid=16&tt=99')
+                    xpth = '/html/body/div[3]/div[3]/div[3]/div[2]/div/div[3]/div/div[1]/div[2]/button[1]'
+                    if self.browser.find_elements(By.XPATH, xpth):
+                        return True
+
+        return False
 
     def check_construction_resources(self, village, slot):
         """

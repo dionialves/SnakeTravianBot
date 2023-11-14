@@ -64,7 +64,7 @@ class Construction(Thread):
                 to_level = construction['to_level']
 
                 #atualiza o campo em específico 
-                self.travian.update_only_slots()
+                self.travian.update_only_slot(village, slot_id)
                 self.database.write(str(self.travian.villages))
 
                 slot_name = self.travian.villages[village]['slot'][slot_id]['name']
@@ -87,7 +87,7 @@ class Construction(Thread):
                         # Verifica se a aldeia tem recursos para fazer a construção
                         if self.travian.check_resources_for_update_slot(village, slot_id):
 
-                            self.travian.upgrade_fields_resource(village, slot_id)
+                            self.travian.upgrade_to_level(village, slot_id)
                             self.log.write(f'{datetime.datetime.now().strftime("%H:%M:%S")} | {village} -> Construindo {slot_name} para o level {int(current_level) +1}')
                         else:
                             self.log.write(f'{datetime.datetime.now().strftime("%H:%M:%S")} | {village} -> Sem recursos suficientes para construir, vamos aguardar 10 minutos')
