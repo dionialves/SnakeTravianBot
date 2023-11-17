@@ -64,6 +64,17 @@ class Browser(Thread):
 
         return True
 
+    def qualquercoisa(self):
+        """
+        Erros a serem tratados:
+
+        selenium.common.exceptions.NoSuchWindowException
+        -> quando s janela não esta mais ativa
+
+        
+        """
+        pass
+
     def await_task(self, task):
         while True:
             self.event.wait(1)

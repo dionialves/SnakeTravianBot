@@ -125,7 +125,7 @@ class Travian(object):
         self.upgrade_orders = {}
         self.resources = {}
         self.troops = {}
-        self.farmlist = False
+        self.farmlist = {'active': False, 'village': None}
 
     def instance_browser(self):
         """
@@ -239,7 +239,7 @@ class Travian(object):
     def get_slots_buildings(self, village):
 
         self.browser.get(f'{self.server}/dorf2.php')
-        level = 0
+        
 
         for x in range(1, 23):
 
@@ -253,6 +253,8 @@ class Travian(object):
 
             if name != 'Empty':
                 level = self.browser.find_element(By.XPATH, f'//*[@id="villageContent"]/div[{x}]/a/div').text
+            else:
+                level = '0'
 
             self.villages[village]['slot'].update(
                 {
@@ -376,7 +378,10 @@ class Travian(object):
             self.upgrade_orders[village]['time'] = seconds
 
     def auto_send_farmlist(self):
+
+        village = self.farmlist['village']
         
+        self.browser.get(self.villages[village]['url'])
         self.browser.get(self.server + '/build.php?id=39&gid=16&tt=99')
 
         buttonStartAllList = self.browser.find_elements(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div[3]/div/div[1]/div[2]/button[1]')
@@ -386,18 +391,16 @@ class Travian(object):
     def get_farmlist(self):
 
         for village in self.villages:
-            for slot in self.villages[village]['slot']:
+            name = self.villages[village]['slot']['39']['name']
+            if name == 'Rally Point':
+                self.browser.get(self.villages[village]['url'])
+                self.browser.get(self.server + '/build.php?id=39&gid=16&tt=99')
+                xpth = '/html/body/div[3]/div[3]/div[3]/div[2]/div/div[3]/div/div[1]/div[2]/button[1]'
+                if self.browser.find_elements(By.XPATH, xpth):
+                    self.farmlist = {'active': True, 'village': village}
+                    break
 
-                name = self.villages[village]['slot'][slot]['name']
-                if name == 'Rally Point':
-                    
-                    self.browser.get(self.villages[village]['url'])
-                    self.browser.get(self.server + '/build.php?id=39&gid=16&tt=99')
-                    xpth = '/html/body/div[3]/div[3]/div[3]/div[2]/div/div[3]/div/div[1]/div[2]/button[1]'
-                    if self.browser.find_elements(By.XPATH, xpth):
-                        self.farmlist = True
-
-    def check_construction_resources(self, village, slot):
+    def check_construction_resources(self):
         """
         Esta função checa se na aldeia tem os recursos necessários para a construção desejada
         """
@@ -449,7 +452,7 @@ class Travian(object):
             self.get_resources(village)
 
             # Pego a quantidade de recursos necessário para atualizar o slot e verifico se posso atualizar
-            resources = self.check_construction_resources(village, slot)
+            resources = self.check_construction_resources()
 
             # Verifica se tem recursos suficientes para realizar o upgrade
             with_resources = self.check_resources_for_update_slot(village, resources)

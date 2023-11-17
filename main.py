@@ -160,7 +160,7 @@ class App:
             start_of_interval = 20
             end_of_interval = 40
 
-            if self.travian.farmlist:
+            if self.travian.farmlist['active']:
                 if self.thread_farmlist:
                     print(f'| --> Farmlist esta ativado com intervalo automatico entre {start_of_interval} e {end_of_interval} minutos')
                     print('|')
@@ -355,7 +355,7 @@ class App:
 
                     print('|')
                     print("|___________________________________________________________________________________________")
-                    print('| (D)elete | (Q)uit')
+                    print('| (D)elete | (U)pdate | (Q)uit')
                     option = input('| => ')
 
                     match option.lower():
@@ -372,6 +372,9 @@ class App:
 
                                 print('| Itens excluidos como solicitado.')
                                 time.sleep(2)
+                        case 'u':
+                            self.browser.add(task='get_upgrade_orders', args={'village': self.current_village})
+                            self.browser.await_task('get_upgrade_orders')
                         case 'q':
                             break
                                 
@@ -380,10 +383,13 @@ class App:
                     print('| ## Nenhuma construção na fila')
                     print('|')
                     print("|___________________________________________________________________________________________")
-                    print('| (Q) Sair')
+                    print('| (U)pdate | (Q) Sair')
                     option = input('| => ')
 
                     match option.lower():
+                        case 'u':
+                            self.browser.add(task='get_upgrade_orders', args={'village': self.current_village})
+                            self.browser.await_task('get_upgrade_orders')
                         case 'q':
                             break
             else:
@@ -391,10 +397,13 @@ class App:
                 print('| ## Nenhuma construção na fila')
                 print('|')
                 print("|___________________________________________________________________________________________")
-                print('| (Q) Sair')
+                print('| (U)pdate | (Q) Sair')
                 option = input('| => ')
 
                 match option.lower():
+                    case 'u':
+                        self.browser.add(task='get_upgrade_orders', args={'village': self.current_village})
+                        self.browser.await_task('get_upgrade_orders')
                     case 'q':
                         break
 
