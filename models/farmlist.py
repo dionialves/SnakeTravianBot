@@ -40,8 +40,8 @@ class Farmlist(Thread):
 
             if self.order_auto_send_farmlist:
 
-                #self.browser.add('auto_send_farmlist')
-                self.travian.auto_send_farmlist()
+                self.browser.add('auto_send_farmlist')
+                #self.travian.auto_send_farmlist()
 
                 interval_in_minutes = randint(
                     int(self.order_auto_send_farmlist['start_of_interval']), 

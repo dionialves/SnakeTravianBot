@@ -29,28 +29,25 @@ BUILDING = {
     'gid21': 'Workshop',
     'gid22': 'Academy',
     'gid23': 'Cranny',
-    'gid24': 'None',
+    'gid24': 'Town Hall',
     'gid25': 'Residence',
-    'gid26': 'None',
-    'gid27': 'Town Hall',
+    'gid26': 'Palace',
+    'gid27': 'None',
     'gid28': 'None',
-    'gid29': "Hero's Mansion",
+    'gid29': "None",
     'gid30': 'None',
-    'gid31': 'Palace',
+    'gid31': 'None',
     'gid32': 'Earth Wall',
     'gid33': 'Palisade',
     'gid34': "Stonemason's Lodge",
     'gid35': "None",
     'gid36': "None",
-    'gid37': "None",
+    'gid37': "Hero's Mansion",
     'gid38': "None",
     'gid39': "None",
     'gid40': "None",
     'gid41': "None",
     'gid42': "Stone Wall"
-
-     
-
 }
 
 TROOPS = {
@@ -127,9 +124,8 @@ class Travian(object):
         self.fields = {}
         self.upgrade_orders = {}
         self.resources = {}
-        self.order_queue = None
         self.troops = {}
-        self.list_farms = False
+        self.farmlist = False
 
     def instance_browser(self):
         """
@@ -183,9 +179,10 @@ class Travian(object):
             self.get_slots_buildings(village)
 
     def update_only_slot(self, village, slot):
-
+        
         self.browser.get(self.villages[village]['url'])
-        self.browser.get(f'{self.server}build.php?id={slot}')
+        self.browser.get(f'{self.server}/build.php?id={str(slot)}&tt=0')
+
         xpath = '//*[@id="build"]'
 
         element = self.browser.find_elements(By.XPATH, xpath)
@@ -238,7 +235,7 @@ class Travian(object):
                         'level': level
                     }
             })
-                
+
     def get_slots_buildings(self, village):
 
         self.browser.get(f'{self.server}/dorf2.php')
@@ -246,7 +243,9 @@ class Travian(object):
 
         for x in range(1, 23):
 
-            elemento = self.browser.find_element(By.XPATH, f'//*[@id="villageContent"]/div[{x}]')                                       
+            # Ger information on slot
+            elemento = self.browser.find_element(By.XPATH, f'//*[@id="villageContent"]/div[{x}]')
+             
             list_class = elemento.get_attribute('class').split()
 
             slot = (list_class[1].split('a')[1])
@@ -292,85 +291,89 @@ class Travian(object):
                 self.villages[list_village[x]] = {'url': url, 'id': id_village}
 
     def get_upgrade_orders(self, village):
-        """
-        Escaneia de todas de uma ldeia específica as ordens de construção.
-        """
 
         self.browser.get(self.villages[village]['url'])
+        self.browser.get(f'{self.server}/dorf1.php')
 
+        # Pega o tempo maximo espera para a atualização
+        self.get_seconds_update(village)
+
+        # Zera inforamções do upgrade orders
+        old_list = []
+        for order in self.upgrade_orders[village]['upgrades']:
+            if order['status'] == 'waiting' or  order['status'] == 'no resources':
+                old_list.append(order)
+        
+        self.upgrade_orders[village]['upgrades'] = []
+        new_list = []
+
+        for x in range(2, 20):
+
+            under_construction = self.browser.find_element(By.XPATH, f'//*[@id="resourceFieldContainer"]/a[{x}]')
+            list_class = under_construction.get_attribute('class').split()
+
+            if 'underConstruction' in list_class:
+                slot = (list_class[4].split('buildingSlot')[1])
+                name = (BUILDING[list_class[3]])
+                level = (list_class[6].split('level')[1])
+
+                new_list.append(
+                    {
+                        'slot': slot,
+                        'name': name,
+                        'level': str(int(level)+1),
+                        'status': 'updating'
+                })
+
+        self.browser.get(f'{self.server}/dorf2.php')
+
+        level = 0
+        for x in range(1, 23):
+
+            under_construction = self.browser.find_elements(By.XPATH, f'//*[@id="villageContent"]/div[{x}]/a') 
+            if under_construction:
+                if 'underConstruction' in under_construction[0].get_attribute('class').split():
+
+                    element = self.browser.find_element(By.XPATH, f'//*[@id="villageContent"]/div[{x}]')
+
+                    list_class = element.get_attribute('class').split()
+
+                    slot = (list_class[1].split('a')[1])
+                    name = (BUILDING[f'gid{list_class[2].split("g")[1]}'])
+
+                    new_list.append(
+                        {
+                            'slot': slot,
+                            'name': name,
+                            'level': str(int(level)+1),
+                            'status': 'updating'
+                    })
+
+        self.upgrade_orders[village]['upgrades'] = new_list + old_list
+
+    def get_seconds_update(self, village):
         drive = self.browser.find_elements(By.XPATH, '//*[@id="contentOuterContainer"]/div/div[2]/div[1]/ul')
-        list_orders = []
+
+        if not self.upgrade_orders.get(village):
+            self.upgrade_orders[village] = {}
+            self.upgrade_orders[village]['upgrades'] = []
 
         if drive:
             # Ajustando string
             drive = drive[0].text
             drive = drive.split('\n')
 
-            # Obtendo nome,level e segundos do upgrade
-            order = self.set_name_and_level(drive[0])
-            secunds = self.convert_string_to_secunds(drive[1])
-
-            order.append(secunds)
-            list_orders.append(order)
+            # Obtendo o tempo em segundos
+            construction = drive[:2][1].split(':')
+            seconds = (int(construction[0])*3600) + (int(construction[1])*60) + int(construction[2][0:2])
 
             # Obtendo informações da segunda ordem de construção
             if len(drive) == 4:
                 # Obtendo nome,level e segundos do upgrade do segundo upgrade
-                order = self.set_name_and_level(drive[2])
-                secunds = self.convert_string_to_secunds(drive[3])
-
-                order.append(secunds)
-                list_orders.append(order)
-
-        self.upgrade_orders[village] = list_orders
-
-    def set_name_and_level(self, order):
-        order = order.split()
-
-        del order[-2]
-        if len(order) > 2:
-            order[0] = f'{order[0]} {order[1]}'
-            del order[1]
-
-        return order
-    
-    def convert_string_to_secunds(self, time):
-        construction = time.split(':')
-        secunds = (int(construction[0])*3600) + (int(construction[1])*60) + int(construction[2][0:2])
-
-        return secunds
-    
-    def get_resources(self, village):
-        """
-        Escaneia os recursos disponíveis em uma aldeia
-        """
-
-        self.browser.get(self.villages[village]['url']) 
-
-        self.browser.implicitly_wait(4)
-
-        lumber = self.browser.find_element(By.ID, 'l1').text
-        clay = self.browser.find_element(By.ID, 'l2').text
-        iron = self.browser.find_element(By.ID, 'l3').text
-        crop = self.browser.find_element(By.ID, 'l4').text
-
-        self.resources[village] = {
-            "lumber": lumber.replace(',', '').replace('.', '').replace(' ', ''),
-            "clay": clay.replace(',', '').replace('.', '').replace(' ', ''),
-            "iron": iron.replace(',', '').replace('.', '').replace(' ', ''),
-            "crop": crop.replace(',', '').replace('.', '').replace(' ', '')
-        }
-
-    def upgrade_to_level(self, village, slot):
-        """
-        Nesta função realizaremos a construção ou o upgrade de recursos, recebendo a aldeia e o id do campo
-        """
-
-        self.browser.get(self.villages[village]['url'])
-        self.browser.get(self.server + '/build.php?id=' + str(slot) + '&tt=0')
-        buttonUpgrade = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[3]/div[1]/button')
-        
-        buttonUpgrade.click()
+                construction = drive[2:][1].split(':')
+                seconds = (int(construction[0])*3600) + (int(construction[1])*60) + int(construction[2][0:2])
+                
+            self.upgrade_orders[village]['time'] = seconds
 
     def auto_send_farmlist(self):
         
@@ -380,7 +383,7 @@ class Travian(object):
         if buttonStartAllList:
             buttonStartAllList[0].click()
 
-    def get_farmlist_is_created(self):
+    def get_farmlist(self):
 
         for village in self.villages:
             for slot in self.villages[village]['slot']:
@@ -392,17 +395,12 @@ class Travian(object):
                     self.browser.get(self.server + '/build.php?id=39&gid=16&tt=99')
                     xpth = '/html/body/div[3]/div[3]/div[3]/div[2]/div/div[3]/div/div[1]/div[2]/button[1]'
                     if self.browser.find_elements(By.XPATH, xpth):
-                        return True
-
-        return False
+                        self.farmlist = True
 
     def check_construction_resources(self, village, slot):
         """
         Esta função checa se na aldeia tem os recursos necessários para a construção desejada
         """
-
-        self.browser.get(self.villages[village]['url'])
-        self.browser.get(self.server + '/build.php?id=' + str(slot))
 
         lumber = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[1]/div[1]/div[1]/span').text
         clay = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[1]/div[1]/div[2]/span').text
@@ -436,12 +434,57 @@ class Travian(object):
 
         return fields
 
-    def check_resources_for_update_slot(self, village, id_field):
-        # Atualiza os recursos da aldeia
-        self.get_resources(village)
+    def upgrade_to_level(self, village, slot, to_level):
+        # Entra na vila
+        self.browser.get(self.villages[village]['url'])
 
-        # retorna lista com recursos necessários para fazer a construção
-        resources = self.check_construction_resources(village, id_field)
+        self.browser.get(f'{self.server}/build.php?id={str(slot)}&tt=0')
+
+        current_level = self.villages[village]['slot'][slot]['level']
+
+        if int(current_level) < int(to_level):
+            
+            # Verifico se tenho recursos para realizar o upgrade
+            # Atualizo a quantidade de recursos que tenho na aldeia
+            self.get_resources(village)
+
+            # Pego a quantidade de recursos necessário para atualizar o slot e verifico se posso atualizar
+            resources = self.check_construction_resources(village, slot)
+
+            # Verifica se tem recursos suficientes para realizar o upgrade
+            with_resources = self.check_resources_for_update_slot(village, resources)
+
+            # Se tem recursos e se não tiver ordens em andamento, realiza o upgrade de level
+            if not with_resources or self.upgrade_orders[village]['upgrades']:
+                status = 'waiting'
+                if not with_resources:
+                    status = 'no resources'
+
+                self.upgrade_orders[village]['upgrades'].append(
+                    {
+                        'slot': slot, 
+                        'name': self.villages[village]['slot'][slot]['name'],
+                        'level': to_level,
+                        'status': status
+                    }
+                )
+
+            elif with_resources:
+                # Atualiza o slot
+                buttonUpgrade = self.browser.find_element(By.XPATH, '/html/body/div[3]/div[3]/div[3]/div[2]/div/div/div[3]/div[3]/div[1]/button')
+                buttonUpgrade.click()
+
+                # Adciona a informação no upgrade_orders
+                self.upgrade_orders[village]['upgrades'].insert(0,
+                    {
+                        'slot': slot, 
+                        'name': self.villages[village]['slot'][slot]['name'],
+                        'level': to_level,
+                        'status': 'updating'
+                    }
+                )
+
+    def check_resources_for_update_slot(self, village, resources):
 
         # Verifica se tem os rercursos necessário para fazer a construção
         if (int(self.resources[village]['lumber']) >= int(resources['lumber']) and
@@ -452,6 +495,25 @@ class Travian(object):
         else:
             return False
 
+    def get_resources(self, village):
+        """
+        Escaneia os recursos disponíveis em uma aldeia
+        """
+
+        self.browser.implicitly_wait(4)
+
+        lumber = self.browser.find_element(By.ID, 'l1').text
+        clay = self.browser.find_element(By.ID, 'l2').text
+        iron = self.browser.find_element(By.ID, 'l3').text
+        crop = self.browser.find_element(By.ID, 'l4').text
+
+        self.resources[village] = {
+            "lumber": lumber.replace(',', '').replace('.', '').replace(' ', ''),
+            "clay": clay.replace(',', '').replace('.', '').replace(' ', ''),
+            "iron": iron.replace(',', '').replace('.', '').replace(' ', ''),
+            "crop": crop.replace(',', '').replace('.', '').replace(' ', '')
+        }
+
     def get_troops_infantary(self, village):
 
         is_created, slot = self.get_barracks_is_created(village)
@@ -460,6 +522,8 @@ class Travian(object):
 
             self.browser.get(f'{self.server}/build.php?id={slot}')
 
+            if not self.troops.get(village):
+                self.troops[village] = {}
             infantry = []
 
             if self.tribe == 'Gaul':
@@ -509,7 +573,7 @@ class Travian(object):
                 if self.browser.find_elements(By.NAME, "t2"):
                     infantry.append('Bowman')
 
-            self.troops['infantry'] = infantry
+            self.troops[village]['infantry'] = infantry
 
     def get_troops_cavalry(self, village):
 
@@ -518,6 +582,9 @@ class Travian(object):
             self.browser.get(self.villages[village]['url'])
 
             self.browser.get(f'{self.server}/build.php?id={slot}')
+
+            if not self.troops.get(village):
+                self.troops[village] = {}
 
             cavalry = []
             if self.tribe == 'Gaul':
@@ -573,7 +640,7 @@ class Travian(object):
                 if self.browser.find_elements(By.NAME, "t6"):
                     cavalry.append('Marauder')
 
-            self.troops['cavalry'] = cavalry
+            self.troops[village]['cavalry'] = cavalry
 
     def infantry_training(self, village, infantry, number_of_trainings):
 
@@ -657,4 +724,7 @@ if __name__ == "__main__":
 
     except Exception as e:
         print("Erro genérico:", e)"""
+    
+    travian = Travian()
+    travian.login('ts20.x2.international.travian.com','Diviks', 'ranaeu21' )
     

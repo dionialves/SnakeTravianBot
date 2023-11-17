@@ -49,14 +49,16 @@ class App:
         print("|___________________________________________________________________________________________")
         print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} | Logando na sua conta, aguarde...')
 
-        self.travian.server, self.travian.username, self.travian.password = self.gui_get_information_on_account()
+        server, username, password = self.gui_get_information_on_account()
 
-        self.travian.login(self.travian.server, self.travian.username, self.travian.password)
-        time.sleep(2)
+        #self.travian.login(self.travian.server, self.travian.username, self.travian.password)
+        self.browser.add(task='login', args={'server': server, 'username': username, 'password': password})
+        self.browser.await_task('login')
 
     def instance(self):
         # busca informações iniciais
-        self.travian.update()
+        self.browser.add('update')
+        self.browser.await_task('update')
 
         # Inicia Log
         self.log = Log(self.travian)
@@ -140,13 +142,14 @@ class App:
                         self.log.write(message)
                         print(message)
 
-                        self.travian.update()
+                        self.browser.add(task='update')
+                        self.browser.await_task('update')
                         self.database.write(self.travian.villages)
 
                     self.menu_of_village()
                 else:
                     print('| Escolha uma das aldeias listada acima!')
-                    time.sleep(4)
+                    time.sleep(2)
 
     def menu_auto_send_farmlist(self):
         while True:
@@ -157,7 +160,7 @@ class App:
             start_of_interval = 20
             end_of_interval = 40
 
-            if self.travian.get_farmlist_is_created():
+            if self.travian.farmlist:
                 if self.thread_farmlist:
                     print(f'| --> Farmlist esta ativado com intervalo automatico entre {start_of_interval} e {end_of_interval} minutos')
                     print('|')
@@ -183,7 +186,7 @@ class App:
 
                             self.log.write(f'{datetime.datetime.now().strftime("%H:%M:%S")} | Farmlist desativado')
                             print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} | Farmlist desativado')
-                            time.sleep(4)
+                            time.sleep(2)
 
                     case 'a':
                         if not self.thread_farmlist:
@@ -194,7 +197,7 @@ class App:
                             self.thread_farmlist.add(start_of_interval, end_of_interval)
 
                             print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} | Farmlist Ativado')
-                            time.sleep(4)
+                            time.sleep(2)
                     case 'q':
                         break
 
@@ -203,10 +206,15 @@ class App:
                 print('|')
                 print('|')
                 print("|___________________________________________________________________________________________")
-                print('| (Q)uit')
+                print('| (U)pdate Information | (Q)uit')
                 option = input('| => ')
 
                 match option.lower():
+                    case 'u':
+                        print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} | Atualizando informações')
+                        # Envia task para a fila de processamento, e obriga do sistema a aguardar o termino dessa atividade
+                        self.browser.add(task='get_farmlist')
+                        self.browser.await_task('get_farmlist')
                     case 'q':
                         break
 
@@ -270,7 +278,7 @@ class App:
                     if slot_id.isdigit() and to_level.isdigit() and slot_id in list:
 
                         if not self.thread_construction.get(self.current_village):
-                            self.thread_construction[self.current_village] = Construction(self.travian)
+                            self.thread_construction[self.current_village] = Construction(self.travian, self.browser)
                             self.thread_construction[self.current_village].daemon = True
                             self.thread_construction[self.current_village].start()
 
@@ -278,13 +286,13 @@ class App:
 
                         print('|')
                         print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} - Ordem de construção adicionado na fila')
-                        time.sleep(4)
+                        time.sleep(2)
                         os.system('cls')
 
                     else:
                         print('|')
                         print('| Id incorreto, selecione um Id da lista!')
-                        time.sleep(4)
+                        time.sleep(2)
 
                 case 'i':
                     self.page_upgrade_in_progress()
@@ -294,7 +302,7 @@ class App:
 
                     if to_level.isdigit():
                         if not self.thread_construction.get(self.current_village):
-                            self.thread_construction[self.current_village] = Construction(self.travian)
+                            self.thread_construction[self.current_village] = Construction(self.travian, self.browser)
                             self.thread_construction[self.current_village].daemon = True
                             self.thread_construction[self.current_village].start()
                     
@@ -307,13 +315,13 @@ class App:
 
                         print('|')
                         print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} - Ordem de construção adicionado na fila')
-                        time.sleep(4)
+                        time.sleep(2)
                         os.system('cls')
             
                     else:
                         print('|')
                         print('| Id incorreto, selecione um Id da lista!')
-                        time.sleep(4) 
+                        time.sleep(2) 
                 case 'q':
                     break
 
@@ -323,18 +331,14 @@ class App:
             print(f'| Main Menu -> {self.current_village} -> Resources and Buildings - List')
             print('|')
 
-            # Verifica se existe alguma ordem em andamento
-            self.travian.get_upgrade_orders(self.current_village)
-
             if self.travian.upgrade_orders.get(self.current_village):
                 print(f'| ')
                 print(f'| ## Sendo construído no momento:')
                 print(f'| ')
-                for order in self.travian.upgrade_orders[self.current_village]:
-                    name = order[0]
-                    level = order[1]
+                resultados = [d for d in self.travian.upgrade_orders[self.current_village]['upgrades'] if d['status'] == 'updating']
 
-                    print(f'| -> {name} para o level {level}')
+                for order in resultados:
+                    print(f'| -> {order["name"]} para o level {order["level"]}')
 
             print(f'| ')
             if self.thread_construction.get(self.current_village):
@@ -358,13 +362,16 @@ class App:
                         case 'd':
                             is_true = input('| Tem certeza que deseja excluir todos os itens da lista? S/N: ')
                             if is_true.lower() == 's':
+                                self.thread_construction[self.current_village].event.set()
+                                self.thread_construction[self.current_village].join()
                                 self.thread_construction[self.current_village] = {}
-                                self.thread_construction[self.current_village] = Construction(self.travian)
+                                
+                                self.thread_construction[self.current_village] = Construction(self.travian, self.browser)
                                 self.thread_construction[self.current_village].daemon = True
                                 self.thread_construction[self.current_village].start()
 
                                 print('| Itens excluidos como solicitado.')
-                                time.sleep(4)
+                                time.sleep(2)
                         case 'q':
                             break
                                 
@@ -399,11 +406,11 @@ class App:
 
         print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} - Atualizando dados, isso pode levar alguns minutos')
 
-        self.travian.update()
+        self.browser.add(task='update')
+        self.browser.await_task('update')
         self.database.write(self.travian.villages)
 
     def page_infantry(self):
-        self.travian.get_troops_infantary(self.current_village)
 
         while True:
             self.header()
@@ -426,7 +433,7 @@ class App:
                 print('| ')
                 print('| ')
                 print("|___________________________________________________________________________________________")
-                print('| (D) Desativar | (Q) Sair')
+                print('| (D)isable | (Q)uit')
                 option = input('| => ')
 
                 match option.lower():
@@ -438,23 +445,26 @@ class App:
                     case 'q':
                         break
             else:
-                if self.travian.troops['infantry']:
-                    
+                if self.current_village in self.travian.troops and 'infantry' in self.travian.troops[self.current_village]:
                     print('| Infantarias habilitadas para treino:')
                     print('| ')
 
-                    for infantry_available in self.travian.troops['infantry']:
+                    for infantry_available in self.travian.troops[self.current_village]['infantry']:
                         print(f'| -> {infantry_available}')
 
                     print('|')
                     print('|')
                     print("|___________________________________________________________________________________________")
-                    print('| (T)o train | (Q)uit')
+                    print('| (T)o train | (U)pdate | (Q)uit')
                     option = input('| => ')
 
                     match option.lower():
                         case 't':
                             self.page_train_infantry()
+
+                        case 'u':
+                            self.browser.add(task='get_troops_infantary', args={'village': self.current_village})
+                            self.browser.await_task('get_troops_infantary')
                 
                         case 'q':
                             break 
@@ -465,10 +475,14 @@ class App:
                     print('|')
                     print('|')
                     print("|___________________________________________________________________________________________")
-                    print('| (Q)uit')
+                    print('| (U)pdate | (Q)uit')
                     option = input('| => ')
                 
                     match option.lower():
+                        case 'u':
+                            self.browser.add(task='get_troops_infantary', args={'village': self.current_village})
+                            self.browser.await_task('get_troops_infantary')
+                    
                         case 'q':
                             break
 
@@ -483,7 +497,7 @@ class App:
             list_of_train_number = []
             infantry = []
             aux = 1
-            for infantry_available in self.travian.troops['infantry']:
+            for infantry_available in self.travian.troops[self.current_village]['infantry']:
                 train_number = input(f'| {aux} - {infantry_available}: ')
                 infantry.append(infantry_available)
                 list_of_train_number.append(train_number)
@@ -501,24 +515,23 @@ class App:
                     check_only_number = all(element.isdigit() for element in list_of_train_number)
                     if check_only_number and interval.isdigit():
                         self.thread_training_infantry[self.current_village] = {}
-                        self.thread_training_infantry[self.current_village] = InfatryTraining(self.travian)
+                        self.thread_training_infantry[self.current_village] = InfatryTraining(self.travian, self.browser)
                         self.thread_training_infantry[self.current_village].daemon = True
                         self.thread_training_infantry[self.current_village].start()
                         self.thread_training_infantry[self.current_village].add(self.current_village, infantry, list_of_train_number, int(interval)*60)
 
                         print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} - Treino inicado!')
-                        time.sleep(4)
+                        time.sleep(2)
                         break
                     else:
                         print('|')
                         print("| Informe apenas numeros!")
-                        time.sleep(4)
+                        time.sleep(2)
 
                 case 'n':
                     break
 
     def page_cavalry(self):
-        self.travian.get_troops_cavalry(self.current_village)
 
         while True:
             self.header()
@@ -543,7 +556,7 @@ class App:
                 print('|')
                 print('|')
                 print("|___________________________________________________________________________________________")
-                print('| (D) Desativar | (Q) Sair')
+                print('| (D)isable | (Q)uit')
                 option = input('| => ')
 
                 match option.lower():
@@ -555,22 +568,25 @@ class App:
                     case 'q':
                         break
             else:
-                if self.travian.troops['cavalry']:
+                if self.current_village in self.travian.troops and 'cavalry' in self.travian.troops[self.current_village]:
                     print('| Cavalarias habilitadas para treino:')
                     print('|')
 
-                    for cavalry_available in self.travian.troops['cavalry']:
+                    for cavalry_available in self.travian.troops[self.current_village]['cavalry']:
                         print(f'| -> {cavalry_available}')
 
                     print('|')
                     print('|')
                     print("|___________________________________________________________________________________________")
-                    print('| (T)o Train | (Q)uit')
+                    print('| (T)o Train | (U)pdate | (Q)uit')
                     option = input('| => ')
 
                     match option.lower():
                         case 't':
                             self.page_train_cavalry()
+                        case 'u':
+                            self.browser.add(task='get_troops_cavalry', args={'village': self.current_village})
+                            self.browser.await_task('get_troops_cavalry')
                         case 'q':
                             break 
                 else:
@@ -580,10 +596,13 @@ class App:
                     print('|')
                     print('|')
                     print("|___________________________________________________________________________________________")
-                    print('| (Q) Sair')
+                    print('| (U)pdate | (Q) Sair')
                     option = input('| => ')
                 
                     match option.lower():
+                        case 'u':
+                            self.browser.add(task='get_troops_cavalry', args={'village': self.current_village})
+                            self.browser.await_task('get_troops_cavalry')
                         case 'q':
                             break
 
@@ -599,7 +618,7 @@ class App:
             list_of_train_number = []
             cavalry = []
             aux = 1
-            for cavalry_available in self.travian.troops['cavalry']:
+            for cavalry_available in self.travian.troops[self.current_village]['cavalry']:
                 train_number = input(f'| {aux} - {cavalry_available}: ')
                 cavalry.append(cavalry_available)
                 list_of_train_number.append(train_number)
@@ -618,18 +637,18 @@ class App:
                     if check_only_number and interval.isdigit():
             
                         self.thread_training_cavalry[self.current_village] = {}
-                        self.thread_training_cavalry[self.current_village] = CavalryTraining(self.travian)
+                        self.thread_training_cavalry[self.current_village] = CavalryTraining(self.travian, self.browser)
                         self.thread_training_cavalry[self.current_village].daemon = True
                         self.thread_training_cavalry[self.current_village].start()
                         self.thread_training_cavalry[self.current_village].add(self.current_village, cavalry, list_of_train_number, int(interval)*60)
 
                         print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} - Treino inicado!')
-                        time.sleep(4)
+                        time.sleep(2)
                         break
                     else:
                         print('|')
                         print("| Informe apenas numeros!")
-                        time.sleep(4)
+                        time.sleep(2)
 
                 case 'n':
                     break
@@ -638,7 +657,6 @@ class App:
         log = Log(self.travian)
         log.print_on_file()
         
-        file = "C:\\Users\\dioni\\github\\SnakeTravianBot\\data"
         observer = Observer()
         observer.schedule(Log(self.travian), path='.', recursive=True)
         observer.start()
@@ -668,7 +686,7 @@ class App:
     def menu_quit_of_system(self):
         print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} - Saindo do Travian Village Bot')
         self.travian.quit()
-        os._exit()
+        sys.exit()
 
 
 if __name__ == "__main__":

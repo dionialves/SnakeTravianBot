@@ -23,7 +23,7 @@ class Construction(Thread):
     wait: É um valor ramdomico que 
 
     """
-    def __init__(self, travian):
+    def __init__(self, travian, browser):
         super().__init__()
 
         self.list_of_construction = []
@@ -31,6 +31,7 @@ class Construction(Thread):
         self.travian = travian
         self.log = Log(travian)
         self.database = Database(travian)
+        self.browser = browser
 
     def add(self, village, slot_id, to_level):
         self.list_of_construction.append({
@@ -53,6 +54,13 @@ class Construction(Thread):
             self.event.wait(1)
 
             if self.list_of_construction:
+                """
+                A lista a ser manipulada, será a de ordens de upgrade, adicionando na ultima posição o status de possível de ser atualizada.
+                É preciso rodar uma função, pegar a primeira posição na lista a ser atualização e verificar se tem os recursos necessários
+                se tiver, coloca um status de "pronto para atualziação".
+
+                Nessa classe, iremos pegar esse item que esta pronto para atualização e atualizar, caso não esteja, será necessario aguardar.
+                """
 
                 # Essa variavel no futuro será definida delo usuário
                 self.wait = random.randint(300, 600)
@@ -63,34 +71,42 @@ class Construction(Thread):
                 slot_id = construction['slot_id']
                 to_level = construction['to_level']
 
-                #atualiza o campo em específico 
-                self.travian.update_only_slot(village, slot_id)
-                self.database.write(str(self.travian.villages))
-
                 slot_name = self.travian.villages[village]['slot'][slot_id]['name']
                 current_level = self.travian.villages[village]['slot'][slot_id]['level']
 
-                # Verifica se já esta no nível desejado
                 if int(current_level) >= int(to_level):
                     self.log.write(f'{datetime.datetime.now().strftime("%H:%M:%S")} | {village} -> {slot_name} já atingiu o nível solicitado!')
                     del self.list_of_construction[0]
+
                 else:
-                    # Verifica se tem alguma construção já em andamento
-                    self.travian.get_upgrade_orders(village)
-                    if self.travian.upgrade_orders[village]:
-                        time_in_update = datetime.timedelta(minutes=int(self.travian.upgrade_orders[village][0][2] / 60 + 2))
+                    self.browser.add(task='get_upgrade_orders', args={'village': village})
+                    self.browser.await_task('get_upgrade_orders')
 
-                        self.log.write(f'{datetime.datetime.now().strftime("%H:%M:%S")} | {village} -> Construção na fila, tempo de espera: {time_in_update} minutos')
-                        self.event.wait(int(self.travian.upgrade_orders[village][0][2] + self.wait))
+                    updating = [d for d in self.travian.upgrade_orders[village]['upgrades'] if d['status'] == 'updating']
 
-                    else:
-                        # Verifica se a aldeia tem recursos para fazer a construção
-                        if self.travian.check_resources_for_update_slot(village, slot_id):
+                    if not updating:
+                        self.browser.add(task='upgrade_to_level', args={'village': village, 'slot': slot_id, 'to_level': to_level})
+                        self.browser.await_task('upgrade_to_level')
 
-                            self.travian.upgrade_to_level(village, slot_id)
+                        slot_in_update = [d for d in self.travian.upgrade_orders[village]['upgrades'] if d['slot'] == slot_id and d['level'] == to_level]
+
+                        if slot_in_update[0]['status'] == 'updating':
                             self.log.write(f'{datetime.datetime.now().strftime("%H:%M:%S")} | {village} -> Construindo {slot_name} para o level {int(current_level) +1}')
-                        else:
+                            
+                        elif slot_in_update[0]['status'] == 'no resources':
+                            
+                            self.travian.upgrade_orders[village]['upgrades'] = [d for d in self.travian.upgrade_orders[village]['upgrades'] if d['slot'] != slot_id]
+
                             self.log.write(f'{datetime.datetime.now().strftime("%H:%M:%S")} | {village} -> Sem recursos suficientes para construir, vamos aguardar 10 minutos')
                             self.event.wait(600)
+
+                    else:
+                        time_in_update = datetime.timedelta(minutes=int(self.travian.upgrade_orders[village]['time']) / 60 + (self.wait / 60))
+
+                        self.log.write(f'{datetime.datetime.now().strftime("%H:%M:%S")} | {village} -> Construção na fila, tempo de espera: {time_in_update} minutos')
+                        self.event.wait(int(self.travian.upgrade_orders[village]['time'] + self.wait))
+
+                        self.browser.add(task='update_only_slot', args={'village': village, 'slot': slot_id})
+                        self.browser.await_task('update_only_slot')
 
                 

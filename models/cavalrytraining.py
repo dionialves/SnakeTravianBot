@@ -7,7 +7,7 @@ from models.log import Log
 
 class CavalryTraining(Thread):
 
-    def __init__(self, travian):
+    def __init__(self, travian, browser):
         super().__init__()
 
         self.training = {}
@@ -15,6 +15,7 @@ class CavalryTraining(Thread):
         self.travian = travian
         self.log = Log(travian)
         self.next_training = None
+        self.browser = browser
 
     def add(self, village, cavalry, number_of_trainings, time):
         self.training = {
@@ -52,8 +53,12 @@ class CavalryTraining(Thread):
                 aux = 1
                 for cavalry in self.training['cavalry']:
                     if int(self.training['number_of_trainings'][aux-1]) > 0:
-                        self.travian.cavalry_training(self.training['village'], cavalry, self.training['number_of_trainings'][aux-1])
+
+                        village = self.training['village']
+                        number_of_trainings = self.training['number_of_trainings'][aux-1]
                         
+                        self.browser.add(task='cavalry_training', args={'village': village, 'cavalry': cavalry, 'number_of_trainings': number_of_trainings})
+
                         self.log.write(f'{datetime.datetime.now().strftime("%H:%M:%S")} | {self.training["village"]} -> Treinando {self.training["number_of_trainings"][aux-1]} unidades de {cavalry}')
                     aux += 1
 
