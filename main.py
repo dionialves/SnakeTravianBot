@@ -12,12 +12,14 @@ from models.database import Database
 from models.infantrytraining import InfatryTraining
 from models.cavalrytraining import CavalryTraining
 from models.browser import Browser
+from models.account import Account
 
 
 class App:
     def __init__(self):
         self.travian = Travian()
         self.current_village = ''
+        self.account = Account()
 
         self.thread_farmlist = {}
 
@@ -35,41 +37,109 @@ class App:
         self.travian.troops['infantry'] = {}
         self.travian.troops['cavalry'] = {}
 
-    def gui_get_information_on_account(self):
-        os.system('cls')
-        print("____________________________________________________________________________________________")
-        print("| Forneça as informações do servidor: ")
-        server = input('| Server => ')
-        username = input('| Username => ')
-        password = input('| Password => ')
+        if sys.platform.startswith('linux'):
+            self.platform = 'linux'
+        elif sys.platform.startswith('win'):
+            self.platform = 'windows'
 
-        return server, username, password
+    def clear(self):
+        if self.platform == 'linux':
+            os.system('clear')
+        elif self.platform == 'windows':
+            os.system('cls')
+
+    def manager_account(self):
+        self.clear()
+        if self.account.is_created():
+            lines = self.account.upload_data()
+
+            if lines:
+                aux = 1
+                print("____________________________________________________________________________________________")
+                print("| Selecione uma das conta abaixo, ou inclua uma nova: ")
+                print('|')
+                print('|')
+                for line in lines:
+                    username = line.split('|')[0]
+                    server = line.split('|')[1].replace('\n', '')
+
+                    print(f'| {aux} - {username} on server {server}')
+                    
+                    aux += 1
+                print('|')
+                print('|')
+                print("|___________________________________________________________________________________________")
+                print(f'| (N)ew | (Q)uit')
+                option = input('| => ')
+
+                if option.lower() == 'q':
+                    if input('| Deseja realmente sair? S/N: ').lower() == 's':
+                        sys.exit()
+
+                elif option.lower() == 'n':
+                    self.new_account()
+
+                if option.isdigit():
+                    if 0 <= (int(option)-1) < len(lines):
+                        self.clear()
+
+                        account = lines[int(option)-1].split('|')
+                        self.travian.server = account[1].replace('\n', '')
+                        self.travian.username = account[0]
+                        print("____________________________________________________________________________________________")
+                        print("| Forneça as informações da sua conta: ")
+                        print(f'| Server: {self.travian.server} ')
+                        print(f'| Username: {self.travian.username}')
+                        self.travian.password = input('| Password => ')
+
+                        self.login()
+
+            else:
+                self.new_account()
+        else:
+            self.new_account()
+                
+    def new_account(self):
+        self.clear()
+        print("____________________________________________________________________________________________")
+        print("| Forneça as informações da sua conta: ")
+        self.travian.server = input('| Server => ')
+        self.travian.username = input('| Username => ')
+        self.travian.password = input('| Password => ')
+
+        self.account.write(f'{self.travian.username}|{self.travian.server}')
+
+        self.login()
 
     def login(self):
         print("|___________________________________________________________________________________________")
         print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} | Logando na sua conta, aguarde...')
 
-        server, username, password = self.gui_get_information_on_account()
-
         #self.travian.login(self.travian.server, self.travian.username, self.travian.password)
-        self.browser.add(task='login', args={'server': server, 'username': username, 'password': password})
+        self.browser.add(task='login', args={'server': self.travian.server, 'username': self.travian.username, 'password': self.travian.password})
         self.browser.await_task('login')
 
     def instance(self):
-        # busca informações iniciais
-        self.browser.add('update')
-        self.browser.await_task('update')
-
         # Inicia Log
         self.log = Log(self.travian)
         self.log.write(f'{datetime.datetime.now().strftime("%H:%M:%S")} | Logado na conta com sucesso')
 
         # Inicia database
         self.database = Database(self.travian)
-        self.database.write(self.travian.villages)
+        
+        self.browser.add(task='update_initial_information')
+        self.browser.await_task('update_initial_information')
+
+        if self.database.is_created():
+            self.travian.villages = self.database.upload_data()
+
+        else:
+            self.browser.add(task='update_only_slots')
+            self.browser.await_task('update_only_slots')
+            self.database.write(self.travian.villages)
 
     def run(self):
-        self.login()
+        self.manager_account()
         self.instance()
 
         while True:
@@ -80,6 +150,11 @@ class App:
                     self.menu_set_village()
                 case '2':
                     self.menu_auto_send_farmlist()
+                case '3':
+                    print('| Updating all villages ...')
+                    self.browser.add(task='update_all')
+                    self.browser.await_task('update_all')
+                    self.database.write(self.travian.villages)
                 case 'p':
                     self.print_log()
                 case 'q':
@@ -93,6 +168,7 @@ class App:
             print('|')
             print('| 1 - Aldeias')
             print('| 2 - Auto Send Farmlist')
+            print('| 3 - Update all Villages')
             print('|')
             print("|___________________________________________________________________________________________")
             print(f'| (P) Print of Logs | (Q)uit')
@@ -116,16 +192,16 @@ class App:
             print('|')
             print("|___________________________________________________________________________________________")
             print(f'| (Q)uit')
-            id_village = input('| => ')
+            option = input('| => ')
 
             # Entra no menu sair
-            if id_village.lower() == 'q':
+            if option.lower() == 'q':
                 break
 
-            if id_village.isdigit():
-                if 0 <= (int(id_village)-1) < len(list_names):
+            if option.isdigit():
+                if 0 <= (int(option)-1) < len(list_names):
 
-                    self.current_village = list_names[int(id_village)-1]
+                    self.current_village = list_names[int(option)-1]
 
                     if self.database.check_data_of_village(self.current_village):
                         message = f'{datetime.datetime.now().strftime("%H:%M:%S")} | {self.current_village} -> Banco de dados carregado com sucesso'
@@ -287,7 +363,7 @@ class App:
                         print('|')
                         print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} - Ordem de construção adicionado na fila')
                         time.sleep(2)
-                        os.system('cls')
+                        self.clear()
 
                     else:
                         print('|')
@@ -316,7 +392,7 @@ class App:
                         print('|')
                         print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} - Ordem de construção adicionado na fila')
                         time.sleep(2)
-                        os.system('cls')
+                        self.clear()
             
                     else:
                         print('|')
@@ -682,7 +758,7 @@ class App:
             observer.stop()
 
     def header(self):
-            os.system('cls')
+            self.clear()
             print("____________________________________________________________________________________________")
             print(f'| Account: {self.travian.username} ({self.travian.tribe})')
             print(f'| Server: {self.travian.server}')

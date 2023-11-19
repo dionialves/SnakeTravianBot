@@ -8,7 +8,9 @@ class Database:
     def __init__(self, travian):
         self.travian = travian
         self.log = Log(travian)
-        self.file = f'data/{self.travian.username}-{self.travian.server[8:]}.db'.lower()
+
+        file_name = f'{self.travian.username}-{self.travian.server[8:]}.db'.lower()
+        self.file = os.path.join(os.getcwd(), 'data', file_name) 
 
     def is_created(self):
         if not os.path.isfile(self.file):

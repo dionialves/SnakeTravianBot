@@ -159,12 +159,15 @@ class Travian(object):
 
         self.browser.find_element(By.XPATH, "/html/body/div[3]/div[2]/div[2]/div[2]/div/div/div[1]/form/table/tbody/tr[5]/td[2]/button").click()
 
-    def update(self):
+    def update_initial_information(self):
         # Obtem o nome das aldeias
         self.get_name_villages()
         # Obtem o nome da tribo
         self.get_tribe()
         # Atualiza todos os slots de todas as aldeias
+
+    def update_all(self):
+        self.update_initial_information()
         self.update_only_slots()
 
     def update_only_slots(self):

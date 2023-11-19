@@ -33,9 +33,19 @@ class Browser(Thread):
         self.travian.get_troops_cavalry(village)
 
         return True
+    
+    def update_initial_information(self):
+        self.travian.update_initial_information()
 
-    def update(self) -> bool:
-        self.travian.update()
+        return True
+
+    def update_all(self) -> bool:
+        self.travian.update_all()
+
+        return True
+    
+    def update_only_slots(self) -> bool:
+        self.travian.update_only_slots()
 
         return True
 
@@ -104,7 +114,13 @@ class Browser(Thread):
             case 'get_troops_cavalry':
                 self.tasks.append([task, {'village': args['village']}])
 
-            case 'update':
+            case 'update_initial_information':
+                self.tasks.append([task])
+
+            case 'update_all':
+                self.tasks.append([task])
+
+            case 'update_only_slots':
                 self.tasks.append([task])
 
             case 'update_only_slot':
@@ -156,8 +172,14 @@ class Browser(Thread):
                     case 'get_troops_cavalry':
                         no_errors = self.get_troops_cavalry(task[1]['village'])
 
-                    case 'update':
-                        no_errors = self.update()
+                    case 'update_initial_information':
+                        no_errors = self.update_initial_information()
+
+                    case 'update_all':
+                        no_errors = self.update_all()
+
+                    case 'update_only_slots':
+                        no_errors = self.update_only_slots()
 
                     case 'update_only_slot':
                         no_errors = self.update_only_slot(task[1]['village'], task[1]['slot'])

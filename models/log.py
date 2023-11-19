@@ -1,13 +1,17 @@
 import os
+import sys
 from watchdog.events import FileSystemEventHandler
 
 class Log(FileSystemEventHandler):
     def __init__(self, travian):
         self.travian = travian
-        self.file = f'data\{self.travian.username}-{self.travian.server[8:]}.log'.lower()
 
+        file_name = f'{self.travian.username}-{self.travian.server[8:]}.log'.lower()
+        self.file = os.path.join(os.getcwd(), 'data', file_name) 
+
+        
     def on_modified(self, event):
-        if event.src_path == f'.\{self.file}':
+        if event.src_path == f'{self.file}':
             self.print_on_file()
 
     def write(self, message):
@@ -22,7 +26,11 @@ class Log(FileSystemEventHandler):
             lines = file.readlines()
             lines = lines[-25:]
 
-        os.system('cls')
+        if sys.platform.startswith('linux'):
+            os.system('clear')
+        elif sys.platform.startswith('win'):
+            os.system('cls')
+
         print("____________________________________________________________")
         print(f'Logs da conta: {self.travian.username}')
         print('')

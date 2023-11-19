@@ -1,0 +1,187 @@
+00:16:44 | Logado na conta com sucesso
+00:21:17 | Logado na conta com sucesso
+00:21:49 | Iniciando FarmList, o proximo esta programado para as 00:44:49
+00:26:34 | Logado na conta com sucesso
+00:07:08 | Logado na conta com sucesso
+00:07:44 | Iniciando FarmList, o proximo esta programado para as 00:43:44
+00:07:49 | Ubuntu -> Banco de dados carregado com sucesso
+00:08:29 | Manjaro -> Banco de dados carregado com sucesso
+00:08:33 | Ubuntu -> Construção na fila, tempo de espera: 1:07:08 minutos
+00:38:00 | Debian -> Banco de dados carregado com sucesso
+00:38:29 | Debian -> Construindo Woodcutter para o level 1
+00:38:35 | Debian -> Construção na fila, tempo de espera: 0:12:46 minutos
+00:43:45 | Iniciando FarmList, o proximo esta programado para as 01:17:45
+00:51:25 | Debian -> Woodcutter já atingiu o nível solicitado!
+00:51:41 | Debian -> Construindo Woodcutter para o level 1
+00:51:50 | Debian -> Construção na fila, tempo de espera: 0:09:54 minutos
+01:01:51 | Debian -> Woodcutter já atingiu o nível solicitado!
+01:02:06 | Debian -> Construindo Woodcutter para o level 1
+01:02:11 | Debian -> Construção na fila, tempo de espera: 0:11:26 minutos
+01:13:43 | Debian -> Woodcutter já atingiu o nível solicitado!
+01:14:04 | Debian -> Construindo Woodcutter para o level 2
+01:14:11 | Debian -> Construção na fila, tempo de espera: 0:14:54 minutos
+01:16:00 | Ubuntu -> Construindo Woodcutter para o level 4
+01:16:13 | Ubuntu -> Construção na fila, tempo de espera: 0:35:44 minutos
+01:17:46 | Iniciando FarmList, o proximo esta programado para as 01:54:46
+01:29:11 | Debian -> Woodcutter já atingiu o nível solicitado!
+01:29:25 | Debian -> Construindo Woodcutter para o level 2
+01:29:32 | Debian -> Construção na fila, tempo de espera: 0:14:07 minutos
+01:43:44 | Debian -> Woodcutter já atingiu o nível solicitado!
+01:44:00 | Debian -> Construindo Woodcutter para o level 2
+01:44:05 | Debian -> Construção na fila, tempo de espera: 0:14:44 minutos
+01:52:01 | Ubuntu -> Woodcutter já atingiu o nível solicitado!
+01:52:18 | Ubuntu -> Construindo Iron Mine para o level 4
+01:52:28 | Ubuntu -> Construção na fila, tempo de espera: 1:15:09 minutos
+01:54:47 | Iniciando FarmList, o proximo esta programado para as 02:21:47
+01:58:55 | Debian -> Woodcutter já atingiu o nível solicitado!
+01:59:12 | Debian -> Construindo Woodcutter para o level 2
+01:59:18 | Debian -> Construção na fila, tempo de espera: 0:13:50 minutos
+02:13:12 | Debian -> Woodcutter já atingiu o nível solicitado!
+02:13:26 | Debian -> Construindo Woodcutter para o level 3
+02:13:34 | Debian -> Construção na fila, tempo de espera: 0:23:04 minutos
+02:21:48 | Iniciando FarmList, o proximo esta programado para as 02:42:48
+02:36:45 | Debian -> Woodcutter já atingiu o nível solicitado!
+02:37:01 | Debian -> Construindo Woodcutter para o level 3
+02:37:10 | Debian -> Construção na fila, tempo de espera: 0:23:02 minutos
+02:42:49 | Iniciando FarmList, o proximo esta programado para as 03:21:49
+03:00:19 | Debian -> Woodcutter já atingiu o nível solicitado!
+03:00:36 | Debian -> Construindo Woodcutter para o level 3
+03:00:43 | Debian -> Construção na fila, tempo de espera: 0:20:23 minutos
+03:07:43 | Ubuntu -> Iron Mine já atingiu o nível solicitado!
+03:07:55 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+03:18:09 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+03:21:10 | Debian -> Woodcutter já atingiu o nível solicitado!
+03:21:25 | Debian -> Construindo Woodcutter para o level 3
+03:21:34 | Debian -> Construção na fila, tempo de espera: 0:20:15 minutos
+03:21:50 | Iniciando FarmList, o proximo esta programado para as 03:49:50
+03:28:25 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+03:38:41 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+03:41:52 | Debian -> Woodcutter já atingiu o nível solicitado!
+03:42:06 | Debian -> Construindo Woodcutter para o level 4
+03:42:11 | Debian -> Construção na fila, tempo de espera: 0:34:57 minutos
+03:48:59 | Ubuntu -> Construindo Iron Mine para o level 4
+03:49:05 | Ubuntu -> Construção na fila, tempo de espera: 1:12:23 minutos
+03:49:51 | Iniciando FarmList, o proximo esta programado para as 04:09:51
+04:09:52 | Iniciando FarmList, o proximo esta programado para as 04:38:52
+04:17:13 | Debian -> Woodcutter já atingiu o nível solicitado!
+04:17:25 | Debian -> Construindo Woodcutter para o level 4
+04:17:30 | Debian -> Construção na fila, tempo de espera: 0:31:54 minutos
+04:38:53 | Iniciando FarmList, o proximo esta programado para as 05:11:53
+04:49:30 | Debian -> Woodcutter já atingiu o nível solicitado!
+04:49:50 | Debian -> Construindo Woodcutter para o level 4
+04:49:59 | Debian -> Construção na fila, tempo de espera: 0:31:59 minutos
+05:01:38 | Ubuntu -> Iron Mine já atingiu o nível solicitado!
+05:01:59 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+05:11:54 | Iniciando FarmList, o proximo esta programado para as 05:45:54
+05:12:11 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+05:22:03 | Debian -> Woodcutter já atingiu o nível solicitado!
+05:22:43 | Debian -> Construindo Woodcutter para o level 4
+05:22:44 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+05:22:50 | Debian -> Construção na fila, tempo de espera: 0:30:36 minutos
+05:32:58 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+05:43:11 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+05:45:55 | Iniciando FarmList, o proximo esta programado para as 06:21:55
+05:53:26 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+05:53:30 | Debian -> Woodcutter já atingiu o nível solicitado!
+05:53:46 | Debian -> Construindo Woodcutter para o level 5
+05:53:53 | Debian -> Construção na fila, tempo de espera: 0:49:27 minutos
+06:03:41 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+06:13:56 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+06:21:56 | Iniciando FarmList, o proximo esta programado para as 06:59:56
+06:24:09 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+06:34:27 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+06:43:27 | Debian -> Woodcutter já atingiu o nível solicitado!
+06:43:47 | Debian -> Construindo Woodcutter para o level 5
+06:44:00 | Debian -> Construção na fila, tempo de espera: 0:49:54 minutos
+06:44:44 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+06:55:06 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+06:59:57 | Iniciando FarmList, o proximo esta programado para as 07:30:57
+07:05:20 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+07:15:33 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+07:25:47 | Ubuntu -> Construindo Iron Mine para o level 4
+07:25:52 | Ubuntu -> Construção na fila, tempo de espera: 0:45:18 minutos
+07:30:58 | Iniciando FarmList, o proximo esta programado para as 08:08:58
+07:33:59 | Debian -> Woodcutter já atingiu o nível solicitado!
+07:34:14 | Debian -> Construindo Woodcutter para o level 5
+07:34:23 | Debian -> Construção na fila, tempo de espera: 0:50:21 minutos
+08:08:59 | Iniciando FarmList, o proximo esta programado para as 08:32:59
+08:11:13 | Ubuntu -> Iron Mine já atingiu o nível solicitado!
+08:11:25 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+08:19:58 | Ubuntu -> Banco de dados carregado com sucesso
+08:21:37 | Manjaro -> Banco de dados carregado com sucesso
+08:21:38 | Ubuntu -> Sem recursos suficientes para construir, vamos aguardar 10 minutos
+08:22:28 | Manjaro -> Construindo Rally Point para o level 7
+08:22:34 | Manjaro -> Construção na fila, tempo de espera: 1:31:49 minutos
+08:22:57 | Arch -> Banco de dados carregado com sucesso
+08:23:27 | Arch -> Treinando 20 unidades de Phalanx
+08:24:06 | Arch -> Treinando 10 unidades de Pathfinder
+08:24:48 | Debian -> Woodcutter já atingiu o nível solicitado!
+08:24:56 | Debian -> Banco de dados carregado com sucesso
+08:25:01 | Debian -> Construindo Woodcutter para o level 1
+08:25:05 | Debian -> Construção na fila, tempo de espera: 0:49:53 minutos
+08:31:52 | Ubuntu -> Construindo Iron Mine para o level 4
+08:31:58 | Ubuntu -> Construção na fila, tempo de espera: 0:45:25 minutos
+08:33:00 | Iniciando FarmList, o proximo esta programado para as 09:07:00
+08:51:45 | Arch -> Treinando 10 unidades de Pathfinder
+09:03:15 | Arch -> Treinando 20 unidades de Phalanx
+09:07:01 | Iniciando FarmList, o proximo esta programado para as 09:31:01
+09:15:03 | Debian -> Woodcutter já atingiu o nível solicitado!
+09:15:15 | Debian -> Construindo Woodcutter para o level 1
+09:15:20 | Debian -> Construção na fila, tempo de espera: 1:16:16 minutos
+09:17:27 | Ubuntu -> Iron Mine já atingiu o nível solicitado!
+09:17:40 | Ubuntu -> Construindo Woodcutter para o level 4
+09:17:45 | Ubuntu -> Construção na fila, tempo de espera: 0:36:43 minutos
+09:19:57 | Arch -> Treinando 10 unidades de Pathfinder
+09:31:02 | Iniciando FarmList, o proximo esta programado para as 10:06:02
+09:34:39 | Arch -> Treinando 20 unidades de Phalanx
+09:48:43 | Arch -> Treinando 10 unidades de Pathfinder
+09:54:41 | Ubuntu -> Woodcutter já atingiu o nível solicitado!
+09:54:44 | Manjaro -> Construindo Rally Point para o level 8
+09:55:02 | Manjaro -> Construção na fila, tempo de espera: 1:48:11 minutos
+09:55:06 | Ubuntu -> Construindo Clay Pit para o level 4
+09:55:11 | Ubuntu -> Construção na fila, tempo de espera: 0:32:44 minutos
+10:06:03 | Iniciando FarmList, o proximo esta programado para as 10:45:03
+10:21:38 | Arch -> Treinando 20 unidades de Phalanx
+10:27:55 | Arch -> Treinando 10 unidades de Pathfinder
+10:27:59 | Ubuntu -> Clay Pit já atingiu o nível solicitado!
+10:28:18 | Ubuntu -> Construindo Woodcutter para o level 4
+10:28:28 | Ubuntu -> Construção na fila, tempo de espera: 0:34:11 minutos
+10:31:40 | Debian -> Woodcutter já atingiu o nível solicitado!
+10:32:02 | Debian -> Construindo Woodcutter para o level 1
+10:32:11 | Debian -> Construção na fila, tempo de espera: 1:16:22 minutos
+10:45:04 | Iniciando FarmList, o proximo esta programado para as 11:16:04
+10:52:35 | Arch -> Treinando 20 unidades de Phalanx
+11:02:29 | Arch -> Treinando 10 unidades de Pathfinder
+11:02:42 | Ubuntu -> Woodcutter já atingiu o nível solicitado!
+11:16:05 | Iniciando FarmList, o proximo esta programado para as 11:38:05
+11:30:59 | Arch -> Treinando 10 unidades de Pathfinder
+11:32:29 | Arch -> Treinando 20 unidades de Phalanx
+11:38:06 | Iniciando FarmList, o proximo esta programado para as 12:05:06
+11:43:59 | Manjaro -> Construindo Rally Point para o level 9
+11:44:21 | Manjaro -> Construção na fila, tempo de espera: 2:06:38 minutos
+11:47:48 | Ubuntu -> Banco de dados carregado com sucesso
+11:48:23 | Ubuntu -> Construindo Woodcutter para o level 4
+11:48:34 | Ubuntu -> Construção na fila, tempo de espera: 0:58:52 minutos
+11:48:40 | Debian -> Woodcutter já atingiu o nível solicitado!
+11:48:41 | Debian -> Woodcutter já atingiu o nível solicitado!
+11:48:42 | Debian -> Woodcutter já atingiu o nível solicitado!
+11:48:43 | Debian -> Woodcutter já atingiu o nível solicitado!
+11:48:44 | Debian -> Woodcutter já atingiu o nível solicitado!
+11:48:45 | Debian -> Woodcutter já atingiu o nível solicitado!
+11:48:46 | Debian -> Woodcutter já atingiu o nível solicitado!
+11:48:47 | Debian -> Woodcutter já atingiu o nível solicitado!
+11:48:48 | Debian -> Woodcutter já atingiu o nível solicitado!
+11:48:49 | Debian -> Woodcutter já atingiu o nível solicitado!
+11:48:50 | Debian -> Woodcutter já atingiu o nível solicitado!
+11:48:51 | Debian -> Woodcutter já atingiu o nível solicitado!
+11:48:52 | Debian -> Woodcutter já atingiu o nível solicitado!
+11:48:53 | Debian -> Woodcutter já atingiu o nível solicitado!
+11:48:54 | Debian -> Woodcutter já atingiu o nível solicitado!
+11:48:55 | Debian -> Woodcutter já atingiu o nível solicitado!
+11:48:56 | Debian -> Woodcutter já atingiu o nível solicitado!
+11:48:57 | Debian -> Woodcutter já atingiu o nível solicitado!
+11:49:25 | Debian -> Construindo Woodcutter para o level 6
+11:49:33 | Debian -> Construção na fila, tempo de espera: 1:19:51 minutos
+12:05:07 | Iniciando FarmList, o proximo esta programado para as 12:42:07
+12:07:45 | Arch -> Treinando 10 unidades de Pathfinder
+12:13:24 | Arch -> Treinando 20 unidades de Phalanx
