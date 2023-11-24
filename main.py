@@ -109,7 +109,7 @@ class App:
 
         self.account.write(f'{self.travian.username}|{self.travian.server}')
 
-        self.login()
+        self.login() 
 
     def login(self):
         print("|___________________________________________________________________________________________")
@@ -139,27 +139,35 @@ class App:
             self.database.write(self.travian.villages)
 
     def run(self):
-        self.manager_account()
-        self.instance()
-
         while True:
-            option = self.main_menu()
+            if not self.travian.logged:
+                self.manager_account()
+                self.instance()
 
-            match option.lower():
-                case '1':
-                    self.menu_set_village()
-                case '2':
-                    self.menu_auto_send_farmlist()
-                case '3':
-                    print('| Updating all villages ...')
-                    self.browser.add(task='update_all')
-                    self.browser.await_task('update_all')
-                    self.database.write(self.travian.villages)
-                case 'p':
-                    self.print_log()
-                case 'q':
-                    if input('| Deseja realmente sair? S/N: ').lower() == 's':
-                        self.menu_quit_of_system()
+            if self.travian.logged:
+
+                option = self.main_menu()
+
+                match option.lower():
+                    case '1':
+                        self.menu_set_village()
+                    case '2':
+                        self.menu_auto_send_farmlist()
+                    case '3':
+                        print('| Updating all villages ...')
+                        self.browser.add(task='update_all')
+                        self.browser.await_task('update_all')
+                        self.database.write(self.travian.villages)
+                    case 'p':
+                        self.print_log()
+                    case 'q':
+                        if input('| Deseja realmente sair? S/N: ').lower() == 's':
+                            self.menu_quit_of_system()
+            else:
+                print('|')
+                print('| Error logging into your account. Incorrect username or password!')
+                self.travian.browser.close()
+                time.sleep(4)
 
     def main_menu(self):
         while True:
@@ -491,8 +499,8 @@ class App:
 
         print(f'| {datetime.datetime.now().strftime("%H:%M:%S")} - Atualizando dados, isso pode levar alguns minutos')
 
-        self.browser.add(task='update')
-        self.browser.await_task('update')
+        self.browser.add(task='update_all')
+        self.browser.await_task('update_all')
         self.database.write(self.travian.villages)
 
     def page_infantry(self):

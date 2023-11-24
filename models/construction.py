@@ -71,8 +71,13 @@ class Construction(Thread):
                 slot_id = construction['slot_id']
                 to_level = construction['to_level']
 
+                self.browser.add(task='update_only_slot', args={'village': village, 'slot': slot_id})
+                self.browser.await_task('update_only_slot')
+                self.database.write(self.travian.villages)
+
                 slot_name = self.travian.villages[village]['slot'][slot_id]['name']
                 current_level = self.travian.villages[village]['slot'][slot_id]['level']
+
 
                 if int(current_level) >= int(to_level):
                     self.log.write(f'{datetime.datetime.now().strftime("%H:%M:%S")} | {village} -> {slot_name} já atingiu o nível solicitado!')
@@ -105,8 +110,5 @@ class Construction(Thread):
 
                         self.log.write(f'{datetime.datetime.now().strftime("%H:%M:%S")} | {village} -> Construção na fila, tempo de espera: {time_in_update} minutos')
                         self.event.wait(int(self.travian.upgrade_orders[village]['time'] + self.wait))
-
-                        self.browser.add(task='update_only_slot', args={'village': village, 'slot': slot_id})
-                        self.browser.await_task('update_only_slot')
 
                 

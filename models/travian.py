@@ -1,8 +1,11 @@
 import time
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.common.by import By
+
+
 
 BUILDING = {
     'gid0': 'Empty',
@@ -126,6 +129,7 @@ class Travian(object):
         self.resources = {}
         self.troops = {}
         self.farmlist = {'active': False, 'village': None}
+        self.logged = False
 
     def instance_browser(self):
         """
@@ -135,6 +139,8 @@ class Travian(object):
         options.add_experimental_option('excludeSwitches', ['enable-logging'])
         #options.add_argument("--headless=new")
         self.browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+
+
         self.browser.implicitly_wait(3)
 
     def login(self, server, username, password):
@@ -158,6 +164,8 @@ class Travian(object):
         password.send_keys(self.password)
 
         self.browser.find_element(By.XPATH, "/html/body/div[3]/div[2]/div[2]/div[2]/div/div/div[1]/form/table/tbody/tr[5]/td[2]/button").click()
+
+        self.is_logged_in()
 
     def update_initial_information(self):
         # Obtem o nome das aldeias
@@ -444,9 +452,20 @@ class Travian(object):
         # Entra na vila
         self.browser.get(self.villages[village]['url'])
 
-        self.browser.get(f'{self.server}/build.php?id={str(slot)}&tt=0')
-
         current_level = self.villages[village]['slot'][slot]['level']
+        name = self.villages[village]['slot'][slot]['name']
+
+        if name == 'Marketplace':
+            code = '&t=0'
+
+        elif name == 'Rally Point' or name == 'Residence' or name == 'Palace':
+            code = '&tt=0'
+
+        else:
+            code = ''
+        
+        self.browser.get(f'{self.server}/build.php?id={str(slot)}{code}')
+
 
         if int(current_level) < int(to_level):
             
@@ -700,6 +719,14 @@ class Travian(object):
             
         return False, None
     
+    def is_logged_in(self):
+        try:
+            self.browser.find_element(By.ID, 'topBarHero')
+            self.logged = True
+
+        except:
+            self.logged = False
+
     def quit(self, *args):
         """
         Responsável por fechar o navegador interno
@@ -732,5 +759,5 @@ if __name__ == "__main__":
         print("Erro genérico:", e)"""
     
     travian = Travian()
-    travian.login('ts20.x2.international.travian.com','Diviks', 'ranaeu21' )
+    travian.login('ts20.x2.international.travian.com','Diviks', 'aaa' )
     

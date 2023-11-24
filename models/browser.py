@@ -81,6 +81,12 @@ class Browser(Thread):
         selenium.common.exceptions.NoSuchWindowException
         -> quando s janela não esta mais ativa
 
+        selenium.common.exceptions.NoSuchElementException
+        -> quando o selenium não encontra algum elemento
+
+        Erro por não estar logado
+
+
         
         """
         pass
@@ -195,6 +201,9 @@ class Browser(Thread):
 
                     case 'cavalry_training':
                         no_errors = self.cavalry_training(task[1]['village'], task[1]['cavalry'], task[1]['number_of_trainings'])
+
+                    case _:
+                        del self.tasks[0]
 
                 if no_errors:
                     del self.tasks[0]
