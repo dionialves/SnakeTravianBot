@@ -2,8 +2,12 @@ import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.firefox.service import Service as FirefoxService
+from webdriver_manager.firefox import GeckoDriverManager
+
+from selenium.webdriver.chrome.service import Service as ChromiumService
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.os_manager import ChromeType
 
 
 
@@ -138,7 +142,11 @@ class Travian(object):
         options = webdriver.ChromeOptions()
         options.add_experimental_option('excludeSwitches', ['enable-logging'])
         #options.add_argument("--headless=new")
-        self.browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        self.browser = webdriver.Chrome(service=ChromiumService(ChromeDriverManager().install()), options=options)
+        #self.browser = webdriver.Chrome(service=ChromiumService(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()))
+
+        #self.browser = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()))
+
 
 
         self.browser.implicitly_wait(3)

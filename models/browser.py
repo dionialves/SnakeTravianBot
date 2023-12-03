@@ -60,9 +60,13 @@ class Browser(Thread):
         return True
     
     def upgrade_to_level(self, village, slot, to_level) -> bool:
-        self.travian.upgrade_to_level(village, slot, to_level)
 
-        return True
+        try:
+            self.travian.upgrade_to_level(village, slot, to_level)
+            return True
+
+        except:
+            return False
 
     def cavalry_training(self, village, cavalry, number_of_trainings) -> bool:
         self.travian.cavalry_training(village, cavalry, number_of_trainings)
@@ -86,8 +90,6 @@ class Browser(Thread):
 
         Erro por não estar logado
 
-
-        
         """
         pass
 
